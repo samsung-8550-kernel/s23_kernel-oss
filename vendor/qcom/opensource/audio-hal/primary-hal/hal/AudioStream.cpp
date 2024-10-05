@@ -2476,6 +2476,12 @@ int StreamOutPrimary::Standby() {
             adevice->voice_->sec_voice_->SetCNGForEchoRefMute(false);
         }
 #endif
+#ifdef SEC_AUDIO_CALL_TRANSLATION
+        if (adevice->voice_ && adevice->voice_->sec_voice_->call_translation &&
+            usecase_ == USECASE_AUDIO_PLAYBACK_VOIP) {
+            adevice->voice_->sec_voice_->SetVoiceRxEffectForTranslation(false);
+        }
+#endif
         ret = pal_stream_stop(pal_stream_handle_);
         if (ret) {
             AHAL_ERR("failed to stop stream.");
@@ -2824,7 +2830,7 @@ int StreamOutPrimary::RouteStream(const std::set<audio_devices_t>& new_devices, 
                 if (this->GetUseCase() == USECASE_AUDIO_PLAYBACK_VOIP &&
                         (AudioExtn::get_device_types(mAndroidOutDevices) != AudioExtn::get_device_types(previousDevices)) &&
                         adevice->voice_->sec_voice_->call_translation) {
-                    adevice->voice_->sec_voice_->SetVoiceRxEffectForTranslation();
+                    adevice->voice_->sec_voice_->SetVoiceRxEffectForTranslation(true);
                 }
 #endif
 #ifdef SEC_AUDIO_SUPPORT_SOUNDBOOSTER_FOLD_PARAM_ON_DSP
@@ -3996,6 +4002,13 @@ ssize_t StreamOutPrimary::configurePalOutputStream() {
             adevice->voice_->mode_ == AUDIO_MODE_IN_COMMUNICATION) {
             adevice->voice_->sec_voice_->SetCNGForEchoRefMute(true);
         }
+#ifdef SEC_AUDIO_CALL_TRANSLATION
+        if (adevice->voice_ && adevice->voice_->sec_voice_->call_translation &&
+            adevice->voice_->mode_ == AUDIO_MODE_IN_COMMUNICATION &&
+            usecase_ == USECASE_AUDIO_PLAYBACK_VOIP) {
+            adevice->voice_->sec_voice_->SetVoiceRxEffectForTranslation(true);
+        }
+#endif
         // send volume once after pal_stream_start()
         if (streamAttributes_.type == PAL_STREAM_VOIP_RX && volume_ &&
             adevice->voice_ && adevice->voice_->mode_ != AUDIO_MODE_IN_CALL) {
@@ -5301,7 +5314,7 @@ int StreamInPrimary::RouteStream(const std::set<audio_devices_t>& new_devices, b
             if (this->GetUseCase() == USECASE_AUDIO_RECORD_VOIP &&
                     adevice->voice_->sec_voice_->call_translation) {
                 stream_mutex_.unlock();
-                adevice->voice_->sec_voice_->SetVoWifiTxEffectForTranslation();
+                adevice->voice_->sec_voice_->SetVoipTxEffectForTranslation();
                 stream_mutex_.lock();
             }
 #endif
@@ -6137,6 +6150,9 @@ ssize_t StreamInPrimary::read(const void *buffer, size_t bytes) {
     }
 #ifdef SEC_AUDIO_CALL_VOIP
     sec_audio_stream_in->RerouteForVoipHeadphone(this);
+#endif
+#ifdef SEC_AUDIO_INTERPRETER_MODE
+    sec_audio_stream_in->RerouteForInterpreter(this);
 #endif
 #ifdef SEC_AUDIO_DUMP
     sec_hal_read_pcm(this, palBuffer.buffer, palBuffer.size, PCM_DUMP_LAST);

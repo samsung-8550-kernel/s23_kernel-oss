@@ -626,7 +626,7 @@ void make_suspend_current_event(void)
 
 	pr_info("[USB] %s\n", __func__);
 
-	if (!g_ss_monitor | !g_ss_monitor->ss_monitor) {
+	if (!g_ss_monitor || !g_ss_monitor->ss_monitor) {
 		pr_info("[USB] %s, g_ss_monitor is NULL\n", __func__);
 		return;
 	}

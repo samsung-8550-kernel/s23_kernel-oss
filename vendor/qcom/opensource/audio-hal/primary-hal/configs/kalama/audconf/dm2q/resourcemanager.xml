@@ -471,6 +471,30 @@
                     <ec_enable>1</ec_enable>
                     <snd_device_name>bargein-tts-speaker-mic</snd_device_name>
                 </custom-config>
+                <custom-config key="interpreter_listen_spk">
+                    <channels>4</channels>
+                    <bit_width>24</bit_width>
+                    <ec_enable>1</ec_enable>
+                    <snd_device_name>interpreter-listen-speaker-mic</snd_device_name>
+                </custom-config>
+                <custom-config key="interpreter_listen_usb">
+                    <channels>4</channels>
+                    <bit_width>24</bit_width>
+                    <ec_enable>1</ec_enable>
+                    <snd_device_name>interpreter-listen-usb-headset-mic</snd_device_name>
+                </custom-config>
+                <custom-config key="interpreter_listen_bt">
+                    <channels>4</channels>
+                    <bit_width>24</bit_width>
+                    <ec_enable>1</ec_enable>
+                    <snd_device_name>interpreter-listen-bt-mic</snd_device_name>
+                </custom-config>
+                <custom-config key="interpreter_conv_spk">
+                    <channels>4</channels>
+                    <bit_width>24</bit_width>
+                    <ec_enable>1</ec_enable>
+                    <snd_device_name>interpreter-conv-speaker-mic</snd_device_name>
+                </custom-config>
                 <custom-config key="karaoke">
                     <bit_width>16</bit_width>
                     <channels>1</channels>
@@ -630,6 +654,9 @@
                 <id>PAL_DEVICE_OUT_AUX_DIGITAL</id>
                 <id>PAL_DEVICE_OUT_HDMI</id>
                 <id>PAL_DEVICE_OUT_AUX_DIGITAL_1</id>
+                <id>PAL_DEVICE_OUT_BLUETOOTH_A2DP</id>
+                <id>PAL_DEVICE_OUT_BLUETOOTH_BLE</id>
+                <id>PAL_DEVICE_OUT_USB_HEADSET</id>
             </ec_rx_device>
         </in-device>
         <in-device>
@@ -818,6 +845,10 @@
                 <custom-config key="bargein_tts">
                     <ec_enable>1</ec_enable>
                     <snd_device_name>bargein-tts-usb-headset-mic</snd_device_name>
+                </custom-config>
+                <custom-config key="interpreter_conv_usb">
+                <ec_enable>1</ec_enable>
+                    <snd_device_name>interpreter-conv-usb-headset-mic</snd_device_name>
                 </custom-config>
             </usecase>
         <!--Uncomment these lines instead of above lines if needing to enable EC per custom key

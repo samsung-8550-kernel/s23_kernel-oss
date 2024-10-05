@@ -76,6 +76,9 @@ static int sr200_dev_open(struct inode *inode, struct file *filp) {
   filp->private_data = sr200_dev;
   SR200_DBG_MSG("%s : major No: %d, minor No: %d\n", __func__, imajor(inode),
                 iminor(inode));
+  if (device_can_wakeup(&sr200_dev->spi->dev)) {
+    device_wakeup_enable(&sr200_dev->spi->dev);
+  }
   return 0;
 }
 /******************************************************************************
@@ -94,7 +97,6 @@ static void sr200_disable_irq(struct sr200_dev *sr200_dev) {
 #endif
   spin_lock_irqsave(&sr200_dev->irq_enabled_lock, flags);
   if ((sr200_dev->irq_enabled)) {
-    disable_irq_wake(sr200_dev->spi->irq);
     disable_irq_nosync(sr200_dev->spi->irq);
     sr200_dev->irq_received = true;
     sr200_dev->irq_enabled = false;
@@ -118,7 +120,6 @@ static void sr200_enable_irq(struct sr200_dev *sr200_dev) {
   spin_lock_irqsave(&sr200_dev->irq_enabled_lock, flags);
   if (!sr200_dev->irq_enabled) {
     enable_irq(sr200_dev->spi->irq);
-    enable_irq_wake(sr200_dev->spi->irq);
     sr200_dev->irq_enabled = true;
     sr200_dev->irq_received = false;
   }
@@ -811,7 +812,7 @@ static int sr200_probe(struct spi_device *spi) {
    */
   // irq_flags = IRQF_TRIGGER_RISING;
   irq_flags = IRQ_TYPE_LEVEL_HIGH;
-  sr200_dev->irq_enabled = false;
+  sr200_dev->irq_enabled = true;
   sr200_dev->irq_received = false;
   ret = request_irq(sr200_dev->spi->irq, sr200_dev_irq_handler, irq_flags,
                     sr200_dev->sr200_device.name, sr200_dev);
@@ -819,7 +820,9 @@ static int sr200_probe(struct spi_device *spi) {
     SR200_ERR_MSG("request_irq failed\n");
     goto err_exit1;
   } else {
-    disable_irq_nosync(sr200_dev->spi->irq);
+    sr200_disable_irq(sr200_dev);
+    device_set_wakeup_capable(&sr200_dev->spi->dev, true);
+    device_wakeup_disable(&sr200_dev->spi->dev);
   }
 
   SR200_DBG_MSG("exit : %s\n", __FUNCTION__);
@@ -855,6 +858,7 @@ static void sr200_remove(struct spi_device *spi) {
   struct sr200_dev *sr200_dev = sr200_get_data(spi);
   SR200_DBG_MSG("entry : %s\n", __FUNCTION__);
   if (sr200_dev != NULL) {
+    device_wakeup_disable(&sr200_dev->spi->dev);
     sr200_regulator_onoff(&spi->dev, sr200_dev, false);
     gpio_free(sr200_dev->reset_gpio);
     mutex_destroy(&sr200_dev->sr200_access_lock);
@@ -891,6 +895,7 @@ static int sr200_remove(struct spi_device *spi) {
   struct sr200_dev *sr200_dev = sr200_get_data(spi);
   SR200_DBG_MSG("entry : %s\n", __FUNCTION__);
   if (sr200_dev != NULL) {
+    device_wakeup_disable(&sr200_dev->spi->dev);
     sr200_regulator_onoff(&spi->dev, sr200_dev, false);
     gpio_free(sr200_dev->reset_gpio);
     mutex_destroy(&sr200_dev->sr200_access_lock);
@@ -915,14 +920,51 @@ static int sr200_remove(struct spi_device *spi) {
 }
 #endif
 
+/**
+ * sr200_dev_resume
+ *
+ * Executed after waking the system up from a sleep state
+ *
+ */
+int sr200_dev_resume(struct device *dev)
+{
+    struct sr200_dev *sr200_dev = dev_get_drvdata(dev);
+
+    if (device_may_wakeup(dev))
+        disable_irq_wake(sr200_dev->spi->irq);
+
+    return 0;
+}
+
+/**
+ * sr200_dev_suspend
+ *
+ * Executed before putting the system into a sleep state
+ *
+ */
+int sr200_dev_suspend(struct device *dev)
+{
+    struct sr200_dev *sr200_dev = dev_get_drvdata(dev);
+
+    if (device_may_wakeup(dev))
+        enable_irq_wake(sr200_dev->spi->irq);
+
+    return 0;
+}
+
 static struct of_device_id sr200_dt_match[] = {{
                                                    .compatible = "nxp,sr200",
                                                },
                                                {}};
+
+static const struct dev_pm_ops sr200_dev_pm_ops = { SET_SYSTEM_SLEEP_PM_OPS(
+        sr200_dev_suspend, sr200_dev_resume) };
+
 static struct spi_driver sr200_driver = {
     .driver =
         {
             .name = "sr200",
+            .pm = &sr200_dev_pm_ops,
             .bus = &spi_bus_type,
             .owner = THIS_MODULE,
             .of_match_table = sr200_dt_match,

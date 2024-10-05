@@ -33,8 +33,8 @@
 
 struct list_lru binder_alloc_lru;
 
-#define MAX_ALLOCATION_SIZE (1536 * 1024)
-#define MAX_ASYNC_ALLOCATION_SIZE (1024 * 1024)
+#define MAX_ALLOCATION_SIZE (1024 * 1024)
+#define MAX_ASYNC_ALLOCATION_SIZE (512 * 1024)
 
 extern int system_server_pid;
 

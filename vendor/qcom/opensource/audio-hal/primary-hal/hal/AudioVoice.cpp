@@ -650,7 +650,7 @@ int AudioVoice::RouteStream(const std::set<audio_devices_t>& rx_devices) {
                     sec_voice_->SetVoiceRxMute(true);
                 }
 #ifdef SEC_AUDIO_VOICE_TX_FOR_INCALL_MUSIC
-                else if (sec_voice_->screen_call){
+                else if (sec_voice_->screen_call && sec_voice_->voice_rx_control == TRANSLATION_MUTE) {
                     sec_voice_->SetVoiceRxMute(true);
                 }
 #endif
@@ -712,7 +712,7 @@ int AudioVoice::RouteStream(const std::set<audio_devices_t>& rx_devices) {
                      if (sec_voice_->call_translation &&
                             (pre_pal_voice_rx_device_id_ != pal_voice_rx_device_id_)) {                 
                          sec_voice_->ControlTxVolumeDown();
-                         sec_voice_->SetVoiceRxEffectForTranslation();
+                         sec_voice_->SetVoiceRxEffectForTranslation(true);
                      }
 #endif
                      if (session->pal_vol_data && sec_voice_->volume != -1.0f) {
@@ -1191,7 +1191,7 @@ int AudioVoice::VoiceStart(voice_session_t *session) {
         session->device_mute.mute = false;
 #endif
 #ifdef SEC_AUDIO_CALL_TRANSLATION
-    if (sec_voice_->voice_rx_control)
+    if (sec_voice_->voice_rx_control == TRANSLATION_MUTE)
         session->device_mute.mute = true;
 
     if (sec_voice_->call_translation)
@@ -1554,6 +1554,9 @@ int AudioVoice::SetVoiceVolume(float volume) {
                     AHAL_DBG("sco volume applied on voice session %d", i);
                     return 0;
                 }
+#endif
+#ifdef SEC_AUDIO_CALL
+                sec_voice_->volume = volume;
 #endif
                 session[i].pal_vol_data->volume_pair[0].vol = volume;
                 if (session[i].pal_voice_handle) {

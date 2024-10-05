@@ -2227,7 +2227,7 @@ int AudioDevice::SetParameters(const char *kvpairs) {
             for (int i = 0; i < stream_in_list_.size(); i++) {
                 stream_in_list_[i]->GetStreamHandle(&stream_in);
                 astream_in = adev_->InGetStream((audio_stream_t*)stream_in);
-                if (astream_in->source_ == AUDIO_SOURCE_CAMCORDER &&
+                if (astream_in && astream_in->source_ == AUDIO_SOURCE_CAMCORDER &&
                     adevice->sec_device_->multidevice_rec &&
                     !(AudioExtn::audio_devices_cmp(astream_in->mAndroidInDevices, audio_is_usb_in_device))) {
                     std::set<audio_devices_t> device_types;

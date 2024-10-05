@@ -45,6 +45,7 @@
 #include <linux/poll.h>
 #include <linux/ktime.h>
 #include <linux/regulator/consumer.h>
+#include <linux/pinctrl/consumer.h>
 #include <linux/spi/spidev.h>
 #include <linux/of_platform.h>
 #if IS_ENABLED(CONFIG_SAMSUNG_NFC)

@@ -146,7 +146,7 @@ void set_led_mode(int led_curr)
 		aw36518_enable_flicker(0, false);
 #elif IS_ENABLED(CONFIG_LEDS_QTI_FLASH) && (IS_ENABLED(CONFIG_SENSORS_STK6D2X) || IS_ENABLED(CONFIG_SENSORS_TSL2511))
 	if(led_curr) {
-		qti_flash_led_set_strobe_sel(switch3_trigger, 1); 
+		qti_flash_led_set_strobe_sel(switch3_trigger, 1);
 		led_trigger_event(torch2_trigger, led_curr/2);
 		led_trigger_event(torch3_trigger, led_curr/2);
 		led_trigger_event(switch3_trigger, 1);
@@ -286,7 +286,9 @@ EXPORT_SYMBOL_GPL(als_eol_mode);
 int als_eol_parse_dt(void)
 {
 	struct device_node *np;
+#if KERNEL_VERSION(6, 2, 0) > LINUX_VERSION_CODE
 	enum of_gpio_flags flags;
+#endif
 
 	np = of_find_node_by_name(NULL, LED_DT_NODE_NAME);
 	if (np == NULL) {
@@ -294,7 +296,11 @@ int als_eol_parse_dt(void)
 		return -1;
 	}
 
+#if KERNEL_VERSION(6, 2, 0) <= LINUX_VERSION_CODE
+	gpio_torch = of_get_named_gpio(np, "flicker_test,torch-gpio", 0);
+#else
 	gpio_torch = of_get_named_gpio_flags(np, "flicker_test,torch-gpio", 0, &flags);
+#endif
 
 	printk(KERN_INFO "%s - torch : %d", __func__, gpio_torch);
 
