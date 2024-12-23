@@ -1188,6 +1188,7 @@ static void walt_binder_low_latency_set(void *unused, struct task_struct *task,
 		return;
 	if (task && ((task_in_related_thread_group(current) &&
 			task->group_leader->prio < MAX_RT_PRIO) ||
+			(walt_get_mvp_task_prio(current) == WALT_LL_PIPE_MVP) ||
 			(current->group_leader->prio < MAX_RT_PRIO &&
 			task_in_related_thread_group(task))))
 		wts->low_latency |= WALT_LOW_LATENCY_BINDER;

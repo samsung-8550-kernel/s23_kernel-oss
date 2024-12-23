@@ -1718,11 +1718,6 @@ static void max77705_init_opcode
 		max77705_set_enable_alternate_mode(ALTERNATE_MODE_START);
 		max77705_muic_enable_detecting_short(usbc_data->muic_data);
 	}
-#ifndef CONFIG_DISABLE_LOCKSCREEN_USB_RESTRICTION
-	else {
-		max77705_set_enable_alternate_mode(ALTERNATE_MODE_READY | ALTERNATE_MODE_STOP);
-	}
-#endif	
 }
 
 static bool max77705_check_recover_opcode(u8 opcode)

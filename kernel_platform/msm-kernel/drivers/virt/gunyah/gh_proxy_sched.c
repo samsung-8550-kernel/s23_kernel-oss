@@ -150,7 +150,8 @@ static inline bool is_vm_supports_proxy(gh_vmid_t gh_vmid)
 
 	/* Only when the vmid corresponding vm's vcpu populated,
 	 * this vm's gh_proxy_vm struct will be initialised with
-	 * vcpu_count > 0.+	 */
+	 * vcpu_count > 0.
+	 */
 	mutex_lock(&gh_vm_mutex);
 	vm = gh_get_vm(gh_vmid);
 	if (vm && vm->id != GH_VMID_INVAL && vm->vcpu_count > 0)
@@ -159,7 +160,6 @@ static inline bool is_vm_supports_proxy(gh_vmid_t gh_vmid)
 	mutex_unlock(&gh_vm_mutex);
 	return ret;
 }
-
 
 static inline struct gh_proxy_vcpu *gh_get_vcpu(struct gh_proxy_vm *vm, gh_capid_t cap_id)
 {

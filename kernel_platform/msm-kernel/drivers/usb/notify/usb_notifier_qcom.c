@@ -152,8 +152,10 @@ static int ccic_usb_handle_notification(struct notifier_block *nb,
 		pr_info("%s: Turn On Device(UFP)\n", __func__);
 		dwc3_max_speed_setting(usb_status.sub3);
 		send_otg_notify(o_notify, NOTIFY_EVENT_VBUS, 1);
+#ifdef CONFIG_DISABLE_LOCKSCREEN_USB_RESTRICTION
 		if (is_blocked(o_notify, NOTIFY_BLOCK_TYPE_CLIENT))
 			return -EPERM;
+#endif
 		break;
 	case USB_STATUS_NOTIFY_DETACH:
 		if (pdata->is_host) {
@@ -539,6 +541,21 @@ static int check_reverse_bypass_device(struct usb_device *dev)
 	return 0;
 }
 
+static int is_sink_charge(struct otg_notify *n)
+{
+	if (!n) {
+		pr_err("%s otg_notify is null\n", __func__);
+		return 0;
+	}
+
+	if (get_typec_status(n, NOTIFY_EVENT_POWER_SOURCE) == HNOTIFY_SINK
+		&& get_booster(n) == NOTIFY_POWER_ON) {
+		pr_info("%s: sink charge\n", __func__);
+		return 1;
+	}
+	return 0;
+}
+
 static void reverse_bypass_drive_on_work(struct work_struct *w)
 {
 	struct otg_notify *o_notify = get_otg_notify();
@@ -569,6 +586,9 @@ static void new_device_added(void *unused, struct usb_device *udev, int *err)
 
 	hdev = udev->bus->root_hub;
 	if (!hdev)
+		return;
+
+	if (is_sink_charge(o_notify))
 		return;
 
 	usb_hub_for_each_child(hdev, port, dev) {
