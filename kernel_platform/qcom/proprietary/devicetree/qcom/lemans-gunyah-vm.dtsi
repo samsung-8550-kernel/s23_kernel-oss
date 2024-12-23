@@ -110,6 +110,44 @@
 			enable-method = "psci";
 			cpu-idle-states = <&CPU_PWR_DWN>;
 		};
+
+		cpu-map {
+			cluster0 {
+				core0 {
+					cpu = <&CPU0>;
+				};
+
+				core1 {
+					cpu = <&CPU1>;
+				};
+
+				core2 {
+					cpu = <&CPU2>;
+				};
+
+				core3 {
+					cpu = <&CPU3>;
+				};
+			};
+
+			cluster1 {
+				core0 {
+					cpu = <&CPU4>;
+				};
+
+				core1 {
+					cpu = <&CPU5>;
+				};
+
+				core2 {
+					cpu = <&CPU6>;
+				};
+
+				core3 {
+					cpu = <&CPU7>;
+				};
+			};
+		};
 	};
 
 	idle-states {
@@ -134,10 +172,10 @@
 		vendor = "QTI";
 		image-name = "qcom,autoghgvm";
 		qcom,pasid = <0x0 0x2c>;
-		qcom,qtee-config-info = "p=3,57,77,78,7C,8F,97,159,199,47E,7F1;";
+		qcom,qtee-config-info = "p=3,57,77,78,7C,8F,97,159,199,47E,7F1;o=100;";
 		qcom,secdomain-ids = <52>;
 		qcom,primary-vm-index = <0>;
-		/* vm-attrs = "crash-fatal"; */
+		vm-attrs = "crash-fatal";
 
 		/* Pass through regions */
 		/* TLMM region */
@@ -145,16 +183,27 @@
 		/* QUPv3 Tile 2 read-only region */
 		/* QUPv3 SE17 region */
 		/* QRNG region */
+		/* Compulte L0 IPCC region */
 		iomemory-ranges = <0x0 0xF000000 0x0 0xF000000 0x0 0x1000000 0x0
 				0x0 0xAC0000 0x0 0xAC0000 0x0 0x6000 0x1
 				0x0 0x8C0000 0x0 0x8C0000 0x0 0x6000 0x1
 				0x0 0x88C000 0x0 0x88C000 0x0 0x4000 0x0
 				0x0 0x10dc000 0x0 0x10dc000 0x0 0x1000 0x0
+				0x0 0x1fd8000 0x0 0x1fd8000 0x0 0x1000 0x1
+				0x0 0x1fd9000 0x0 0x1fd9000 0x0 0x1000 0x3
+				0x0 0x1fdd000 0x0 0x1fdd000 0x0 0x1000 0x3
+				0x0 0x1fdb000 0x0 0x1fdb000 0x0 0x1000 0x0
+				0x0 0x1fdf000 0x0 0x1fdf000 0x0 0x1000 0x0
+				0x0 0x461000 0x0 0x461000 0x0 0x1000 0x0
 				>;
 
 		/* Pass through IRQs */
 		/* QUPv3 SE17 GIC IRQ */
-		gic-irq-ranges = <617 617>;
+		/* Compulte L0 IPCC GIC IRQ */
+		gic-irq-ranges = <617 617
+				270 270
+				271 271
+				588 588>;
 
 		memory {
 			#address-cells = <0x2>;
@@ -375,6 +424,7 @@
 			virtio-mmio@12 {
 				vdevice-type = "virtio-mmio";
 				generate = "/virtio-mmio";
+				virtio,device-type = <18>;		/* VirtIO Input ID */
 				peer-default;
 				vqs-num = <0x2>;
 				push-compatible = "virtio,mmio";
@@ -420,6 +470,7 @@
 			virtio-mmio@15 {
 				vdevice-type = "virtio-mmio";
 				generate = "/virtio-mmio";
+				virtio,device-type = <18>;		/* VirtIO Input ID */
 				peer-default;
 				vqs-num = <0x2>;
 				push-compatible = "virtio,mmio";
@@ -592,6 +643,16 @@
 		#iommu-cells = <2>;
 		qcom,use-3-lvl-tables;
 		dma-coherent;
+	};
+
+	ipcc_compute_l0_apps_ns1: qcom,ipcc@461000 {
+		compatible = "qcom,ipcc";
+		reg = <0x461000 0x1000>;
+		interrupts = <GIC_SPI 556 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-controller;
+		#interrupt-cells = <3>;
+		#mbox-cells = <2>;
+		status = "ok";
 	};
 
 	dma_dev@0x0 {
