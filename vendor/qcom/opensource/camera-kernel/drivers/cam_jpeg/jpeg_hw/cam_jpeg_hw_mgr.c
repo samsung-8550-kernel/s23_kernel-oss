@@ -203,7 +203,7 @@ static int cam_jpeg_add_command_buffers(struct cam_packet *packet,
 
 			cmd_buf_kaddr = (uint32_t *)kaddr;
 
-			if ((cmd_desc[i].offset / sizeof(uint32_t)) >= len) {
+			if (cmd_desc[i].offset >= len) {
 				CAM_ERR(CAM_JPEG, "Invalid offset: %u cmd buf len: %zu",
 					cmd_desc[i].offset, len);
 				return -EINVAL;

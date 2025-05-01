@@ -31,7 +31,9 @@
 #define TRUE 1
 #endif
 
-char cam_cal_check[INDEX_MAX][SYSFS_FW_VER_SIZE] = { [0 ... INDEX_MAX - 1] = "NULL" };
+char cam_cal_check[MAX_EEP_CAMID][SYSFS_FW_VER_SIZE] = { "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL"};
+char camera_info[MAX_EEP_CAMID][10] = { "Rear", "Front", "Rear2", "Rear3", "Rear4", "Front2", "Front3"};
+
 #if defined(CONFIG_SAMSUNG_REAR_BOKEH)
 char bokeh_module_fw_ver[FROM_MODULE_FW_INFO_SIZE+1];
 #endif
@@ -1102,23 +1104,23 @@ static int cam_sec_eeprom_module_info_set_load_version(int rev, struct cam_eepro
 					bokeh_module_fw_ver[10]);
 		}
 		ConfIdx = ADDR_CUSTOM_SENSOR_ID;
-		memset(sensor_id[INDEX_REAR3],0x00,sizeof(sensor_id[INDEX_REAR3]));
+		memset(sensor_id[EEP_REAR3],0x00,sizeof(sensor_id[EEP_REAR3]));
 		if (isValidIdx(ConfIdx, &ConfAddr) == 1)
 		{
-			memcpy(sensor_id[INDEX_REAR3], &e_ctrl->cal_data.mapdata[ConfAddr], FROM_SENSOR_ID_SIZE);
-			sensor_id[INDEX_REAR3][FROM_SENSOR_ID_SIZE] = '\0';
+			memcpy(sensor_id[EEP_REAR3], &e_ctrl->cal_data.mapdata[ConfAddr], FROM_SENSOR_ID_SIZE);
+			sensor_id[EEP_REAR3][FROM_SENSOR_ID_SIZE] = '\0';
 			CAM_DBG(CAM_EEPROM,
 					"[BOKEH]%s sensor_id = %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
 					mInfo->typeStr,
-					sensor_id[INDEX_REAR3][0], sensor_id[INDEX_REAR3][1], sensor_id[INDEX_REAR3][2], sensor_id[INDEX_REAR3][3],
-					sensor_id[INDEX_REAR3][4], sensor_id[INDEX_REAR3][5], sensor_id[INDEX_REAR3][6], sensor_id[INDEX_REAR3][7],
-					sensor_id[INDEX_REAR3][8], sensor_id[INDEX_REAR3][9], sensor_id[INDEX_REAR3][10], sensor_id[INDEX_REAR3][11],
-					sensor_id[INDEX_REAR3][12], sensor_id[INDEX_REAR3][13], sensor_id[INDEX_REAR3][14], sensor_id[INDEX_REAR3][15]);
+					sensor_id[EEP_REAR3][0], sensor_id[EEP_REAR3][1], sensor_id[EEP_REAR3][2], sensor_id[EEP_REAR3][3],
+					sensor_id[EEP_REAR3][4], sensor_id[EEP_REAR3][5], sensor_id[EEP_REAR3][6], sensor_id[EEP_REAR3][7],
+					sensor_id[EEP_REAR3][8], sensor_id[EEP_REAR3][9], sensor_id[EEP_REAR3][10], sensor_id[EEP_REAR3][11],
+					sensor_id[EEP_REAR3][12], sensor_id[EEP_REAR3][13], sensor_id[EEP_REAR3][14], sensor_id[EEP_REAR3][15]);
 		}
 	}
 	//fill rear3 fw info
-	sprintf(fw_ver[INDEX_REAR3], "%s %s\n", bokeh_module_fw_ver, bokeh_module_fw_ver);
-	sprintf(fw_full_ver[INDEX_REAR3], "%s %s %s\n", bokeh_module_fw_ver, bokeh_module_fw_ver,bokeh_module_fw_ver);
+	sprintf(cam_fw_ver[EEP_REAR3], "%s %s\n", bokeh_module_fw_ver, bokeh_module_fw_ver);
+	sprintf(cam_fw_full_ver[EEP_REAR3], "%s %s %s\n", bokeh_module_fw_ver, bokeh_module_fw_ver,bokeh_module_fw_ver);
 #endif
 
 #if defined(CONFIG_SEC_DM1Q_PROJECT) || defined(CONFIG_SEC_DM2Q_PROJECT) || defined(CONFIG_SEC_DM3Q_PROJECT) || defined(CONFIG_SEC_Q5Q_PROJECT)
@@ -1138,24 +1140,24 @@ static int cam_sec_eeprom_module_info_set_load_version(int rev, struct cam_eepro
 		}
 
 		ConfIdx = ADDR_M_SENSOR_ID;
-		memset(sensor_id[INDEX_REAR3], 0x00, sizeof(sensor_id[INDEX_REAR3]));
+		memset(sensor_id[EEP_REAR3], 0x00, sizeof(sensor_id[EEP_REAR3]));
 		if (isValidIdx(ConfIdx, &ConfAddr) == 1)
 		{
-			memcpy(sensor_id[INDEX_REAR3], &e_ctrl->cal_data.mapdata[ConfAddr], FROM_SENSOR_ID_SIZE);
-			sensor_id[INDEX_REAR3][FROM_SENSOR_ID_SIZE] = '\0';
+			memcpy(sensor_id[EEP_REAR3], &e_ctrl->cal_data.mapdata[ConfAddr], FROM_SENSOR_ID_SIZE);
+			sensor_id[EEP_REAR3][FROM_SENSOR_ID_SIZE] = '\0';
 			CAM_DBG(CAM_EEPROM,
 					"[TRIPLE]%s sensor_id = %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
 					mInfo->typeStr,
-					sensor_id[INDEX_REAR3][0], sensor_id[INDEX_REAR3][1], sensor_id[INDEX_REAR3][2], sensor_id[INDEX_REAR3][3],
-					sensor_id[INDEX_REAR3][4], sensor_id[INDEX_REAR3][5], sensor_id[INDEX_REAR3][6], sensor_id[INDEX_REAR3][7],
-					sensor_id[INDEX_REAR3][8], sensor_id[INDEX_REAR3][9], sensor_id[INDEX_REAR3][10], sensor_id[INDEX_REAR3][11],
-					sensor_id[INDEX_REAR3][12], sensor_id[INDEX_REAR3][13], sensor_id[INDEX_REAR3][14], sensor_id[INDEX_REAR3][15]);
+					sensor_id[EEP_REAR3][0], sensor_id[EEP_REAR3][1], sensor_id[EEP_REAR3][2], sensor_id[EEP_REAR3][3],
+					sensor_id[EEP_REAR3][4], sensor_id[EEP_REAR3][5], sensor_id[EEP_REAR3][6], sensor_id[EEP_REAR3][7],
+					sensor_id[EEP_REAR3][8], sensor_id[EEP_REAR3][9], sensor_id[EEP_REAR3][10], sensor_id[EEP_REAR3][11],
+					sensor_id[EEP_REAR3][12], sensor_id[EEP_REAR3][13], sensor_id[EEP_REAR3][14], sensor_id[EEP_REAR3][15]);
 		}
 	}
 
 	//fill rear3 fw info
-	sprintf(fw_ver[INDEX_REAR3], "%s %s\n", rear3_module_fw_ver, rear3_module_fw_ver);
-	sprintf(fw_full_ver[INDEX_REAR3], "%s %s %s\n", rear3_module_fw_ver, rear3_module_fw_ver, rear3_module_fw_ver);
+	sprintf(cam_fw_ver[EEP_REAR3], "%s %s\n", rear3_module_fw_ver, rear3_module_fw_ver);
+	sprintf(cam_fw_full_ver[EEP_REAR3], "%s %s %s\n", rear3_module_fw_ver, rear3_module_fw_ver, rear3_module_fw_ver);
 #endif
 
 #if defined(CONFIG_SAMSUNG_REAR_QUADRA)
@@ -1175,24 +1177,24 @@ static int cam_sec_eeprom_module_info_set_load_version(int rev, struct cam_eepro
 		}
 
 		ConfIdx = ADDR_M_SENSOR_ID;
-		memset(sensor_id[INDEX_REAR4], 0x00, sizeof(sensor_id[INDEX_REAR4]));
+		memset(sensor_id[EEP_REAR4], 0x00, sizeof(sensor_id[EEP_REAR4]));
 		if (isValidIdx(ConfIdx, &ConfAddr) == 1)
 		{
-			memcpy(sensor_id[INDEX_REAR4], &e_ctrl->cal_data.mapdata[ConfAddr], FROM_SENSOR_ID_SIZE);
-			sensor_id[INDEX_REAR4][FROM_SENSOR_ID_SIZE] = '\0';
+			memcpy(sensor_id[EEP_REAR4], &e_ctrl->cal_data.mapdata[ConfAddr], FROM_SENSOR_ID_SIZE);
+			sensor_id[EEP_REAR4][FROM_SENSOR_ID_SIZE] = '\0';
 			CAM_DBG(CAM_EEPROM,
 					"[TRIPLE]%s sensor_id = %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
 					mInfo->typeStr,
-					sensor_id[INDEX_REAR4][0], sensor_id[INDEX_REAR4][1], sensor_id[INDEX_REAR4][2], sensor_id[INDEX_REAR4][3],
-					sensor_id[INDEX_REAR4][4], sensor_id[INDEX_REAR4][5], sensor_id[INDEX_REAR4][6], sensor_id[INDEX_REAR4][7],
-					sensor_id[INDEX_REAR4][8], sensor_id[INDEX_REAR4][9], sensor_id[INDEX_REAR4][10], sensor_id[INDEX_REAR4][11],
-					sensor_id[INDEX_REAR4][12], sensor_id[INDEX_REAR4][13], sensor_id[INDEX_REAR4][14], sensor_id[INDEX_REAR4][15]);
+					sensor_id[EEP_REAR4][0], sensor_id[EEP_REAR4][1], sensor_id[EEP_REAR4][2], sensor_id[EEP_REAR4][3],
+					sensor_id[EEP_REAR4][4], sensor_id[EEP_REAR4][5], sensor_id[EEP_REAR4][6], sensor_id[EEP_REAR4][7],
+					sensor_id[EEP_REAR4][8], sensor_id[EEP_REAR4][9], sensor_id[EEP_REAR4][10], sensor_id[EEP_REAR4][11],
+					sensor_id[EEP_REAR4][12], sensor_id[EEP_REAR4][13], sensor_id[EEP_REAR4][14], sensor_id[EEP_REAR4][15]);
 		}
 	}
 
 	//fill rear4 fw info
-	sprintf(fw_ver[INDEX_REAR4], "%s %s\n", rear4_module_fw_ver, rear4_module_fw_ver);
-	sprintf(fw_full_ver[INDEX_REAR4], "%s %s %s\n", rear4_module_fw_ver, rear4_module_fw_ver, rear4_module_fw_ver);
+	sprintf(cam_fw_ver[EEP_REAR4], "%s %s\n", rear4_module_fw_ver, rear4_module_fw_ver);
+	sprintf(cam_fw_full_ver[EEP_REAR4], "%s %s %s\n", rear4_module_fw_ver, rear4_module_fw_ver, rear4_module_fw_ver);
 #endif
 
 	/* temp load version */
@@ -1683,7 +1685,11 @@ int cam_sec_eeprom_update_module_info(struct cam_eeprom_ctrl_t *e_ctrl)
 	ModuleInfo_t 	mInfo;
 	ModuleInfo_t 	mInfoSub;
 
+#if 0//TEMP_8350
+	unsigned int rev = sec_hw_rev();
+#else
 	unsigned int rev = 0;
+#endif
 
 	CAM_INFO(CAM_EEPROM, "E");
 
@@ -1700,7 +1706,63 @@ int cam_sec_eeprom_update_module_info(struct cam_eeprom_ctrl_t *e_ctrl)
 	memset(&mInfo, 0x00, sizeof(ModuleInfo_t));
 	memset(&mInfoSub, 0x00, sizeof(ModuleInfo_t));
 
-	cam_sec_eeprom_link_module_info(e_ctrl, &mInfo);
+	switch(e_ctrl->soc_info.index)
+	{
+		case SEC_WIDE_SENSOR:
+			cam_sec_eeprom_link_module_info(e_ctrl, &mInfo, EEP_REAR);
+			mInfo.mVer.cam_cal_ack             = cam_cal_check[EEP_REAR];
+			break;
+
+#if defined(CONFIG_SEC_DM1Q_PROJECT)|| defined(CONFIG_SEC_DM2Q_PROJECT) || defined(CONFIG_SEC_DM3Q_PROJECT) || defined(CONFIG_SEC_Q5Q_PROJECT)
+		case SEC_TELE_SENSOR:
+			cam_sec_eeprom_link_module_info(e_ctrl, &mInfo, EEP_REAR3);
+			mInfo.mVer.cam_cal_ack			   = cam_cal_check[EEP_REAR3];
+			break;
+#endif
+
+#if defined(CONFIG_SAMSUNG_REAR_QUADRA)
+		case SEC_TELE2_SENSOR:
+			cam_sec_eeprom_link_module_info(e_ctrl, &mInfo, EEP_REAR4);
+			mInfo.mVer.cam_cal_ack             = cam_cal_check[EEP_REAR4];
+			break;
+#endif
+
+		case SEC_FRONT_SENSOR:
+			cam_sec_eeprom_link_module_info(e_ctrl, &mInfo, EEP_FRONT);
+			mInfo.mVer.cam_cal_ack             = cam_cal_check[EEP_FRONT];
+
+			break;
+
+#if defined(CONFIG_SAMSUNG_FRONT_DUAL)
+		case SEC_FRONT_AUX1_SENSOR:
+			cam_sec_eeprom_link_module_info(e_ctrl, &mInfo, EEP_FRONT2);
+			mInfo.mVer.cam_cal_ack             = cam_cal_check[EEP_FRONT2];
+			break;
+#endif
+
+		case SEC_ULTRA_WIDE_SENSOR:
+#if defined(CONFIG_SAMSUNG_REAR_DUAL)
+			cam_sec_eeprom_link_module_info(e_ctrl, &mInfo, EEP_REAR2);
+			mInfo.mVer.cam_cal_ack             = cam_cal_check[EEP_REAR2];
+#endif
+			break;
+
+#if defined(CONFIG_SAMSUNG_FRONT_TOP)
+#if defined(CONFIG_SAMSUNG_FRONT_DUAL)
+		case SEC_FRONT_TOP_SENSOR:
+			cam_sec_eeprom_link_module_info(e_ctrl, &mInfo, EEP_FRONT3);
+			mInfo.mVer.cam_cal_ack             = cam_cal_check[EEP_FRONT];
+			break;
+#else
+		case SEC_FRONT_TOP_SENSOR:
+			cam_sec_eeprom_link_module_info(e_ctrl, &mInfo, EEP_FRONT2);
+			mInfo.mVer.cam_cal_ack             = cam_cal_check[EEP_FRONT];
+			break;
+#endif
+#endif
+		default:
+			break;
+	}
 
 	memcpy(mInfo.mVer.phone_hw_info, M_HW_INFO, HW_INFO_MAX_SIZE);
 	memcpy(mInfo.mVer.phone_sw_info, M_SW_INFO, SW_INFO_MAX_SIZE);
@@ -1718,27 +1780,27 @@ int cam_sec_eeprom_update_module_info(struct cam_eeprom_ctrl_t *e_ctrl)
         };
 
         cam_sec_eeprom_module_info_set_afcal(ADDR_M_AF, front_idx, sizeof(front_idx)/sizeof(front_idx[0]),
-            e_ctrl->cal_data.mapdata, af_cal_str[INDEX_FRONT], sizeof(af_cal_str[INDEX_FRONT]));
+            e_ctrl->cal_data.mapdata, front_af_cal_str, sizeof(front_af_cal_str));
 #endif //!defined(CONFIG_SAMSUNG_FRONT_TOP_EEPROM)
 
 		/* front mtf exif */
 		if (isValidIdx(ADDR_M0_MTF, &ConfAddr) == 1)
 		{
-			memcpy(mtf_exif[INDEX_FRONT], &e_ctrl->cal_data.mapdata[ConfAddr], FROM_MTF_SIZE);
-			mtf_exif[INDEX_FRONT][FROM_MTF_SIZE] = '\0';
-			CAM_DBG(CAM_EEPROM, "front mtf exif = %s", mtf_exif[INDEX_FRONT]);
+			memcpy(front_mtf_exif, &e_ctrl->cal_data.mapdata[ConfAddr], FROM_MTF_SIZE);
+			front_mtf_exif[FROM_MTF_SIZE] = '\0';
+			CAM_DBG(CAM_EEPROM, "front mtf exif = %s", front_mtf_exif);
 		}
 
 		if (isValidIdx(ADDR_M0_PAF, &ConfAddr) == 1)
 		{
 			ConfAddr += PAF_CAL_ERR_CHECK_OFFSET;
-			memcpy(&paf_err_data_result[INDEX_FRONT], &e_ctrl->cal_data.mapdata[ConfAddr], 4);
+			memcpy(&front_paf_err_data_result, &e_ctrl->cal_data.mapdata[ConfAddr], 4);
 		}
 
 #if defined(CONFIG_SAMSUNG_FRONT_DUAL)
 		/* front2 dual cal */
-		mInfo.mVer.dual_cal = dual_cal[INDEX_FRONT2];
-		mInfo.mVer.DualTilt = &dual_tilt[INDEX_FRONT2];
+		mInfo.mVer.dual_cal = front2_dual_cal;
+		mInfo.mVer.DualTilt = &front2_dual;
 		cam_sec_eeprom_module_info_set_dual_tilt(DUAL_TILT_FRONT, ADDR_M_DUAL_CAL,
 			SIZE_M_DUAL_CAL, e_ctrl->cal_data.mapdata, "front2", &mInfo);
 #endif //#if defined(CONFIG_SAMSUNG_FRONT_DUAL)
@@ -1762,7 +1824,7 @@ int cam_sec_eeprom_update_module_info(struct cam_eeprom_ctrl_t *e_ctrl)
         };
 
         cam_sec_eeprom_module_info_set_afcal(ADDR_M_AF, front3_idx, sizeof(front3_idx)/sizeof(front3_idx[0]),
-            e_ctrl->cal_data.mapdata, af_cal_str[INDEX_FRONT3], sizeof(af_cal_str[INDEX_FRONT3]));
+            e_ctrl->cal_data.mapdata, front3_af_cal_str, sizeof(front3_af_cal_str));
 #endif //!defined(CONFIG_SAMSUNG_FRONT_TOP_EEPROM)
 	}
 #endif //#if defined(CONFIG_SAMSUNG_FRONT_TOP)
@@ -1783,9 +1845,9 @@ int cam_sec_eeprom_update_module_info(struct cam_eeprom_ctrl_t *e_ctrl)
 		/* rear mtf exif */
 		if (isValidIdx(ADDR_M0_MTF, &ConfAddr) == 1)
 		{
-			memcpy(mtf_exif[INDEX_REAR], &e_ctrl->cal_data.mapdata[ConfAddr], FROM_MTF_SIZE);
-			mtf_exif[INDEX_REAR][FROM_MTF_SIZE] = '\0';
-			CAM_DBG(CAM_EEPROM, "rear mtf exif = %s", mtf_exif[INDEX_REAR]);
+			memcpy(rear_mtf_exif, &e_ctrl->cal_data.mapdata[ConfAddr], FROM_MTF_SIZE);
+			rear_mtf_exif[FROM_MTF_SIZE] = '\0';
+			CAM_DBG(CAM_EEPROM, "rear mtf exif = %s", rear_mtf_exif);
 		}
 
 		/* rear mtf2 exif */
@@ -1800,17 +1862,17 @@ int cam_sec_eeprom_update_module_info(struct cam_eeprom_ctrl_t *e_ctrl)
 		/* rear3 mtf exif */
 		if (isValidIdx(ADDR_S0_MTF, &ConfAddr) == 1)
 		{
-			memcpy(mtf_exif[INDEX_REAR3], &e_ctrl->cal_data.mapdata[ConfAddr], FROM_MTF_SIZE);
-			mtf_exif[INDEX_REAR3][FROM_MTF_SIZE] = '\0';
-			CAM_DBG(CAM_EEPROM, "rear3 mtf exif = %s", mtf_exif[INDEX_REAR3]);
+			memcpy(rear3_mtf_exif, &e_ctrl->cal_data.mapdata[ConfAddr], FROM_MTF_SIZE);
+			rear3_mtf_exif[FROM_MTF_SIZE] = '\0';
+			CAM_DBG(CAM_EEPROM, "rear3 mtf exif = %s", rear3_mtf_exif);
 		}
 #if defined(CONFIG_SAMSUNG_REAR_QUADRA)
 		/* rear4 mtf exif */
 		if (isValidIdx(ADDR_S0_MTF, &ConfAddr) == 1)
 		{
-			memcpy(mtf_exif[INDEX_REAR4], &e_ctrl->cal_data.mapdata[ConfAddr], FROM_MTF_SIZE);
-			mtf_exif[INDEX_REAR4][FROM_MTF_SIZE] = '\0';
-			CAM_DBG(CAM_EEPROM, "rear4 mtf exif = %s", mtf_exif[INDEX_REAR4]);
+			memcpy(rear4_mtf_exif, &e_ctrl->cal_data.mapdata[ConfAddr], FROM_MTF_SIZE);
+			rear4_mtf_exif[FROM_MTF_SIZE] = '\0';
+			CAM_DBG(CAM_EEPROM, "rear4 mtf exif = %s", rear4_mtf_exif);
 		}
 #endif
 
@@ -1828,8 +1890,8 @@ int cam_sec_eeprom_update_module_info(struct cam_eeprom_ctrl_t *e_ctrl)
 			{
 				if (e_ctrl->cal_data.num_data >= (ConfAddr + ConfSize))
 				{
-					mInfo.mVer.dual_cal = dual_cal[INDEX_REAR3];
-					mInfo.mVer.DualTilt = &dual_tilt[INDEX_REAR3];
+					mInfo.mVer.dual_cal = rear3_dual_cal;
+					mInfo.mVer.DualTilt = &rear3_dual;
 					cam_sec_eeprom_module_info_set_dual_tilt(DUAL_TILT_REAR_TELE, ADDR_S_DUAL_CAL,
 						SIZE_S_DUAL_CAL, e_ctrl->cal_data.mapdata, "rear3 tele", &mInfo);
 				}
@@ -1849,20 +1911,20 @@ int cam_sec_eeprom_update_module_info(struct cam_eeprom_ctrl_t *e_ctrl)
 
 			if (e_ctrl->soc_info.index == SEC_WIDE_SENSOR) {
 				cam_sec_eeprom_module_info_set_afcal(ADDR_M_AF, rear_idx, sizeof(rear_idx)/sizeof(rear_idx[0]),
-					e_ctrl->cal_data.mapdata, af_cal_str[INDEX_REAR], sizeof(af_cal_str[INDEX_REAR]));
+					e_ctrl->cal_data.mapdata, rear_af_cal_str, sizeof(rear_af_cal_str));
 			}
 			else if (e_ctrl->soc_info.index == SEC_ULTRA_WIDE_SENSOR) {
 				cam_sec_eeprom_module_info_set_afcal(ADDR_M_AF, rear_idx, sizeof(rear_idx)/sizeof(rear_idx[0]),
-					e_ctrl->cal_data.mapdata, af_cal_str[INDEX_REAR2], sizeof(af_cal_str[INDEX_REAR2]));
+					e_ctrl->cal_data.mapdata, rear2_af_cal_str, sizeof(rear2_af_cal_str));
 			}
 			else if (e_ctrl->soc_info.index == SEC_TELE_SENSOR) {
 				cam_sec_eeprom_module_info_set_afcal(ADDR_S0_AF, rear_idx, sizeof(rear_idx)/sizeof(rear_idx[0]),
-					e_ctrl->cal_data.mapdata, af_cal_str[INDEX_REAR3], sizeof(af_cal_str[INDEX_REAR3]));
+					e_ctrl->cal_data.mapdata, rear3_af_cal_str, sizeof(rear3_af_cal_str));
 			}
 #if defined(CONFIG_SAMSUNG_REAR_QUADRA)
 			else if (e_ctrl->soc_info.index == SEC_TELE2_SENSOR) {
 				cam_sec_eeprom_module_info_set_afcal(ADDR_S0_AF, rear_idx, sizeof(rear_idx)/sizeof(rear_idx[0]),
-					e_ctrl->cal_data.mapdata, af_cal_str[INDEX_REAR4], sizeof(af_cal_str[INDEX_REAR4]));
+					e_ctrl->cal_data.mapdata, rear4_af_cal_str, sizeof(rear4_af_cal_str));
 			}
 #endif
 #else       //  #if defined(CONFIG_SEC_DM3Q_PROJECT)
@@ -1874,10 +1936,10 @@ int cam_sec_eeprom_update_module_info(struct cam_eeprom_ctrl_t *e_ctrl)
 			};
 
 			cam_sec_eeprom_module_info_set_afcal(ADDR_M_AF, rear_idx, sizeof(rear_idx)/sizeof(rear_idx[0]),
-				e_ctrl->cal_data.mapdata, af_cal_str[INDEX_REAR], sizeof(af_cal_str[INDEX_REAR]));
+				e_ctrl->cal_data.mapdata, rear_af_cal_str, sizeof(rear_af_cal_str));
 
 			cam_sec_eeprom_module_info_set_afcal(ADDR_S0_AF, rear_idx, sizeof(rear_idx)/sizeof(rear_idx[0]),
-				e_ctrl->cal_data.mapdata, af_cal_str[INDEX_REAR3], sizeof(af_cal_str[INDEX_REAR3]));
+				e_ctrl->cal_data.mapdata, rear3_af_cal_str, sizeof(rear3_af_cal_str));
 #endif      //  #if defined(CONFIG_SEC_DM3Q_PROJECT)
 		}
 
@@ -1891,8 +1953,8 @@ int cam_sec_eeprom_update_module_info(struct cam_eeprom_ctrl_t *e_ctrl)
 			};
 
 			cam_sec_eeprom_module_info_set_afcal(ADDR_M_AF, rear_idx, sizeof(rear_idx)/sizeof(rear_idx[0]),
-				e_ctrl->cal_data.mapdata, af_cal_str[INDEX_REAR], sizeof(af_cal_str[INDEX_REAR]));
-		}
+				e_ctrl->cal_data.mapdata, rear_af_cal_str, sizeof(rear_af_cal_str));
+		}		
 #else
 		{
 			AfIdx_t rear_idx[] = {
@@ -1903,12 +1965,12 @@ int cam_sec_eeprom_update_module_info(struct cam_eeprom_ctrl_t *e_ctrl)
 			};
 
 			cam_sec_eeprom_module_info_set_afcal(ADDR_M_AF, rear_idx, sizeof(rear_idx)/sizeof(rear_idx[0]),
-			e_ctrl->cal_data.mapdata, af_cal_str[INDEX_REAR], sizeof(af_cal_str[INDEX_REAR]));
+			e_ctrl->cal_data.mapdata, rear_af_cal_str, sizeof(rear_af_cal_str));
 		}
 #endif
 		/* rear2 sw dual cal */
-		mInfo.mVer.dual_cal = dual_cal[INDEX_REAR2];;
-		mInfo.mVer.DualTilt = &dual_tilt[INDEX_REAR2];
+		mInfo.mVer.dual_cal = rear2_dual_cal;
+		mInfo.mVer.DualTilt = &rear2_dual;
 		cam_sec_eeprom_module_info_set_dual_tilt(DUAL_TILT_REAR_UW, ADDR_M_DUAL_CAL,
 			SIZE_M_DUAL_CAL, e_ctrl->cal_data.mapdata, "rear2 uw", &mInfo);
 #else
@@ -1926,7 +1988,7 @@ int cam_sec_eeprom_update_module_info(struct cam_eeprom_ctrl_t *e_ctrl)
 		};
 
 			cam_sec_eeprom_module_info_set_afcal(ADDR_M_AF, rear_idx, sizeof(rear_idx)/sizeof(rear_idx[0]),
-				e_ctrl->cal_data.mapdata, af_cal_str[INDEX_REAR], sizeof(af_cal_str[INDEX_REAR]));
+				e_ctrl->cal_data.mapdata, rear_af_cal_str, sizeof(rear_af_cal_str));
 		}
 #endif
 
@@ -1941,7 +2003,7 @@ int cam_sec_eeprom_update_module_info(struct cam_eeprom_ctrl_t *e_ctrl)
 		if (isValidIdx(ADDR_M0_PAF, &ConfAddr) == 1)
 		{
 			ConfAddr += PAF_CAL_ERR_CHECK_OFFSET;
-			memcpy(&paf_err_data_result[INDEX_REAR], &e_ctrl->cal_data.mapdata[ConfAddr], 4);
+			memcpy(&paf_err_data_result, &e_ctrl->cal_data.mapdata[ConfAddr], 4);
 		}
 
 		cam_sec_eeprom_module_info_set_paf(ADDR_M1_PAF,
@@ -1962,7 +2024,7 @@ int cam_sec_eeprom_update_module_info(struct cam_eeprom_ctrl_t *e_ctrl)
 		if (isValidIdx(ADDR_S0_PAF, &ConfAddr) == 1)
 		{
 			ConfAddr += PAF_CAL_ERR_CHECK_OFFSET;
-			memcpy(&paf_err_data_result[INDEX_REAR3], &e_ctrl->cal_data.mapdata[ConfAddr], 4);
+			memcpy(&rear3_paf_err_data_result, &e_ctrl->cal_data.mapdata[ConfAddr], 4);
 		}
 #endif
 
@@ -1971,7 +2033,7 @@ int cam_sec_eeprom_update_module_info(struct cam_eeprom_ctrl_t *e_ctrl)
 			if (isValidIdx(ADDR_M0_PAF, &ConfAddr) == 1)
 			{
 				ConfAddr += PAF_CAL_ERR_CHECK_OFFSET;
-				memcpy(&paf_err_data_result[INDEX_REAR2], &e_ctrl->cal_data.mapdata[ConfAddr], 4);
+				memcpy(&rear2_paf_err_data_result, &e_ctrl->cal_data.mapdata[ConfAddr], 4);
 			}
 		}
 
@@ -1979,7 +2041,7 @@ int cam_sec_eeprom_update_module_info(struct cam_eeprom_ctrl_t *e_ctrl)
 			if (isValidIdx(ADDR_S0_PAF, &ConfAddr) == 1)
 			{
 				ConfAddr += PAF_CAL_ERR_CHECK_OFFSET;
-				memcpy(&paf_err_data_result[INDEX_REAR4], &e_ctrl->cal_data.mapdata[ConfAddr], 4);
+				memcpy(&rear4_paf_err_data_result, &e_ctrl->cal_data.mapdata[ConfAddr], 4);
 			}
 		}
 #endif
@@ -2089,9 +2151,9 @@ int cam_sec_eeprom_update_module_info(struct cam_eeprom_ctrl_t *e_ctrl)
 		/* rear2 mtf exif */
 		if (isValidIdx(ADDR_M0_MTF, &ConfAddr) == 1)
 		{
-			memcpy(mtf_exif[INDEX_REAR2], &e_ctrl->cal_data.mapdata[ConfAddr], FROM_MTF_SIZE);
-			mtf_exif[INDEX_REAR2][FROM_MTF_SIZE] = '\0';
-			CAM_DBG(CAM_EEPROM, "rear2 mtf exif = %s", mtf_exif[INDEX_REAR2]);
+			memcpy(rear2_mtf_exif, &e_ctrl->cal_data.mapdata[ConfAddr], FROM_MTF_SIZE);
+			rear2_mtf_exif[FROM_MTF_SIZE] = '\0';
+			CAM_DBG(CAM_EEPROM, "rear2 mtf exif = %s", rear2_mtf_exif);
 		}
 	}
 #endif
@@ -2143,69 +2205,24 @@ int cam_sec_eeprom_update_module_info(struct cam_eeprom_ctrl_t *e_ctrl)
 	return rc;
 }
 
-void cam_sec_eeprom_link_module_info(struct cam_eeprom_ctrl_t *e_ctrl, ModuleInfo_t *mInfo)
+void cam_sec_eeprom_link_module_info(struct cam_eeprom_ctrl_t *e_ctrl, ModuleInfo_t *mInfo, eeprom_camera_id_type camera_id)
 {
-	int index = -1;
+	strlcpy(mInfo->typeStr, camera_info[camera_id], FROM_MODULE_FW_INFO_SIZE);
+	mInfo->typeStr[FROM_MODULE_FW_INFO_SIZE-1] = '\0';
 
-	if (e_ctrl->soc_info.index >= SEC_SENSOR_ID_MAX) {
-		CAM_ERR(CAM_EEPROM, "subdev_id: %d is not supported", e_ctrl->soc_info.index);
-		return;
-	}
+	mInfo->type                         = e_ctrl->soc_info.index;
+	mInfo->M_or_S                       = MAIN_MODULE;
 
-	switch(e_ctrl->soc_info.index)
-	{
-		case SEC_WIDE_SENSOR:
-			strlcpy(mInfo->typeStr, "Rear", FROM_MODULE_FW_INFO_SIZE);
-			index = INDEX_REAR;
-			break;
-		case SEC_ULTRA_WIDE_SENSOR:
-			strlcpy(mInfo->typeStr, "Rear2", FROM_MODULE_FW_INFO_SIZE);
-			index = INDEX_REAR2;
-			break;
-		case SEC_TELE_SENSOR:
-			strlcpy(mInfo->typeStr, "Rear3", FROM_MODULE_FW_INFO_SIZE);
-			index = INDEX_REAR3;
-			break;
-		case SEC_TELE2_SENSOR:
-			strlcpy(mInfo->typeStr, "Rear4", FROM_MODULE_FW_INFO_SIZE);
-			index = INDEX_REAR4;
-			break;
-		case SEC_FRONT_SENSOR:
-			strlcpy(mInfo->typeStr, "Front", FROM_MODULE_FW_INFO_SIZE);
-			index = INDEX_FRONT;
-			break;
-		case SEC_FRONT_AUX1_SENSOR:
-			strlcpy(mInfo->typeStr, "Front2", FROM_MODULE_FW_INFO_SIZE);
-			index = INDEX_FRONT2;
-			break;
-		case SEC_FRONT_TOP_SENSOR:
-			strlcpy(mInfo->typeStr, "Front3", FROM_MODULE_FW_INFO_SIZE);
-			index = INDEX_FRONT3;
-			break;
-		default:
-			break;
-	}
+	mInfo->mVer.sensor_id               = sensor_id[camera_id];
+	mInfo->mVer.sensor2_id              = sensor_id[camera_id];
+	mInfo->mVer.module_id               = module_id[camera_id];
 
-	if (index >= 0) {
-		mInfo->typeStr[FROM_MODULE_FW_INFO_SIZE-1] = '\0';
-		mInfo->type                         = e_ctrl->soc_info.index;
-		mInfo->M_or_S					   = MAIN_MODULE;
+	mInfo->mVer.module_info             = module_info[camera_id];
+	mInfo->mVer.cam_fw_ver              = cam_fw_ver[camera_id];
+	mInfo->mVer.cam_fw_full_ver         = cam_fw_full_ver[camera_id];
 
-		mInfo->mVer.sensor_id			   = sensor_id[index];
-		mInfo->mVer.sensor2_id			   = sensor_id[index];
-		mInfo->mVer.module_id			   = module_id[index];
-
-		mInfo->mVer.module_info			   = module_info[index];
-
-		mInfo->mVer.cam_cal_ack			   = cam_cal_check[index];
-		if (e_ctrl->soc_info.index == SEC_FRONT_TOP_SENSOR)
-			mInfo->mVer.cam_cal_ack		   = cam_cal_check[INDEX_FRONT];
-		mInfo->mVer.cam_fw_ver			   = fw_ver[index];
-		mInfo->mVer.cam_fw_full_ver		   = fw_full_ver[index];
-
-		mInfo->mVer.fw_user_ver			   = fw_user_ver[index];
-		mInfo->mVer.fw_factory_ver		   = fw_factory_ver[index];
-	}
+	mInfo->mVer.fw_user_ver             = cam_fw_user_ver[camera_id];
+	mInfo->mVer.fw_factory_ver          = cam_fw_factory_ver[camera_id];	
 }
 
 void cam_sec_eeprom_update_sysfs_fw_version(
@@ -2387,7 +2404,7 @@ int32_t cam_sec_eeprom_check_firmware_cal(uint32_t camera_cal_crc, uint32_t came
 
 	/* 4. update CAL check ack on sysfs rear_calcheck */
 	strlcpy(mInfo->mVer.cam_cal_ack, cam_cal_ack, SYSFS_FW_VER_SIZE);
-	snprintf(cal_crc, SYSFS_FW_VER_SIZE, "%s %s\n", cam_cal_check[INDEX_REAR], cam_cal_check[INDEX_FRONT]);
+	snprintf(cal_crc, SYSFS_FW_VER_SIZE, "%s %s\n", cam_cal_check[EEP_REAR], cam_cal_check[EEP_FRONT]);
 
 	CAM_INFO(CAM_EEPROM,
 		"version_module_maker: 0x%x, MODULE_VER_ON_PVR: 0x%x, MODULE_VER_ON_SRA: 0x%x",
