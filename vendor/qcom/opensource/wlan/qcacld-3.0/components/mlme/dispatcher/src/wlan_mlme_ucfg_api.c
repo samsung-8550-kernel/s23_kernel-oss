@@ -230,17 +230,7 @@ QDF_STATUS
 ucfg_mlme_get_sta_keep_alive_period(struct wlan_objmgr_psoc *psoc,
 				    uint32_t *val)
 {
-	struct wlan_mlme_psoc_ext_obj *mlme_obj;
-
-	mlme_obj = mlme_get_psoc_ext_obj(psoc);
-	if (!mlme_obj) {
-		*val = cfg_default(CFG_INFRA_STA_KEEP_ALIVE_PERIOD);
-		return QDF_STATUS_E_INVAL;
-	}
-
-	*val = mlme_obj->cfg.sta.sta_keep_alive_period;
-
-	return QDF_STATUS_SUCCESS;
+	return wlan_mlme_get_sta_keep_alive_period(psoc, val);
 }
 
 QDF_STATUS
@@ -2040,3 +2030,21 @@ ucfg_mlme_get_valid_channels(struct wlan_objmgr_psoc *psoc,
 
 	return QDF_STATUS_SUCCESS;
 }
+
+QDF_STATUS
+ucfg_mlme_get_dfs_discard_mode(struct wlan_objmgr_psoc *psoc,
+			       uint8_t *val)
+{
+	struct wlan_mlme_psoc_ext_obj *mlme_obj;
+
+	mlme_obj = mlme_get_psoc_ext_obj(psoc);
+	if (!mlme_obj) {
+		*val = cfg_default(CFG_DISCARD_DFS_CHANNEL_FOR_MODE);
+		return QDF_STATUS_E_INVAL;
+	}
+
+	*val = mlme_obj->cfg.dfs_cfg.dfs_discard_mode;
+
+	return QDF_STATUS_SUCCESS;
+}
+

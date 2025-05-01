@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2011-2021 The Linux Foundation. All rights reserved.
- * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2022-2023 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -121,7 +121,7 @@ static void lim_extract_he_op(struct pe_session *session,
 		return;
 	if (!session->he_op.oper_info_6g_present) {
 		pe_debug("6GHz op not present in 6G beacon");
-		session->ap_power_type = REG_VERY_LOW_POWER_AP;
+		session->ap_defined_power_type_6g = REG_VERY_LOW_POWER_AP;
 		return;
 	}
 	session->ch_width = session->he_op.oper_info_6g.info.ch_width;
@@ -129,11 +129,11 @@ static void lim_extract_he_op(struct pe_session *session,
 		session->he_op.oper_info_6g.info.center_freq_seg0;
 	session->ch_center_freq_seg1 =
 		session->he_op.oper_info_6g.info.center_freq_seg1;
-	session->ap_power_type =
+	session->ap_defined_power_type_6g =
 		session->he_op.oper_info_6g.info.reg_info;
-	if (session->ap_power_type < REG_INDOOR_AP ||
-	    session->ap_power_type > REG_MAX_SUPP_AP_TYPE) {
-		session->ap_power_type = REG_VERY_LOW_POWER_AP;
+	if (session->ap_defined_power_type_6g < REG_INDOOR_AP ||
+	    session->ap_defined_power_type_6g > REG_MAX_SUPP_AP_TYPE) {
+		session->ap_defined_power_type_6g = REG_VERY_LOW_POWER_AP;
 		pe_debug("AP power type invalid, defaulting to VLP");
 	}
 

@@ -12556,11 +12556,6 @@ void LocApiV02 :: setSecGnssConfiguration (const char* sec_ext_config, int32_t l
     loc_param_s_type* sec_param_table = loc_secgps_get_params_table(&table_length);
     loc_update_conf(sec_ext_config, length, sec_param_table, table_length);
 
-    bool isKorFeature = false;
-    const char* sec_sales_code = getSalesCode();
-    isKorFeature = (strncmp(sec_sales_code, "SKT", 3) == 0)||(strncmp(sec_sales_code, "KTT", 3) == 0)
-               ||(strncmp(sec_sales_code, "LGU", 3) == 0)||(strncmp(sec_sales_code, "KOO", 3) == 0);
-
     if (sec_gps_conf_tmp.AGPS_TYPE != sec_gps_conf.AGPS_TYPE
        ||(strcmp(sec_gps_conf_tmp.SUPL_HOST, sec_gps_conf.SUPL_HOST)!=0)
        ||sec_gps_conf_tmp.SUPL_PORT != sec_gps_conf.SUPL_PORT
@@ -12568,19 +12563,11 @@ void LocApiV02 :: setSecGnssConfiguration (const char* sec_ext_config, int32_t l
       len = snprintf(url, sizeof(url), "%s:%u", sec_gps_conf.SUPL_HOST, (unsigned) sec_gps_conf.SUPL_PORT);
       setServerSync(url, len, LOC_AGPS_SUPL_SERVER);
       setCertType(sec_gps_conf.SSL_TYPE);
-    } else if (isKorFeature) {
-      len = snprintf(url, sizeof(url), "%s:%u", sec_gps_conf.SUPL_HOST, (unsigned) sec_gps_conf.SUPL_PORT);
-      setServerSync(url, len, LOC_AGPS_SUPL_SERVER);
-      setCertType(sec_gps_conf.SSL_TYPE);
     }
     if (sec_gps_conf_tmp.SUPL_VERSION != sec_gps_conf.SUPL_VERSION) {
       setSUPLVersionSync((GnssConfigSuplVersion)sec_gps_conf.SUPL_VERSION);
-    } else if (isKorFeature) {
-      setSUPLVersionSync((GnssConfigSuplVersion)sec_gps_conf.SUPL_VERSION);
     }
     if (sec_gps_conf_tmp.SSL != sec_gps_conf.SSL) {
-      setSuplSecurity(sec_gps_conf.SSL);
-    } else if (isKorFeature) {
       setSuplSecurity(sec_gps_conf.SSL);
     }
     if (sec_gps_conf_tmp.AGNSS_PROTOCOL != sec_gps_conf.AGNSS_PROTOCOL) {
@@ -12706,6 +12693,7 @@ void LocApiV02 :: requestSetSecGnssParams()
       mPendingSetParam = true;
       LOC_LOGD("GPS session is on going, set param is pending");
   } else {
+      sec_gps_conf.SEC_CONFIG_CHANGE_IN_PROGRESS = 1;
       mSecDefaultInitDone = false;
       handleEngineDownEvent();
       LOC_LOGD("sec set param by modem request");
@@ -13117,7 +13105,7 @@ void handleAgnssConfigIndMsg(uint8_t* ind_msg, uint32_t length) {
     strtok_r(bdmsg_copy, ",", &next_ptr);
     msg_name = strtok_r(NULL, ",", &next_ptr);
      
-    if (strcmp(msg_name,"JAMMER_MSG") == 0) {
+    if (sec_gps_conf.NMEA_ALLOWED && strcmp(msg_name,"JAMMER_MSG") == 0) {
       if (sLocApi != NULL) {
         sLocApi->reportNmea(bdmsg, strlen(bdmsg));
       } else {

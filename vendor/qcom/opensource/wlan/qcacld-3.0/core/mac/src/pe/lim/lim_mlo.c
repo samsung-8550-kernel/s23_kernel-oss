@@ -671,6 +671,7 @@ QDF_STATUS lim_mlo_proc_assoc_req_frm(struct wlan_objmgr_vdev *vdev,
 	qdf_copy_macaddr(&link_bssid, (struct qdf_mac_addr *)session->bssId);
 	status = util_gen_link_assoc_req(
 				frm_body, frame_len, sub_type == LIM_REASSOC,
+				0,
 				link_bssid,
 				qdf_nbuf_data(assoc_req->assoc_req_buf),
 				qdf_nbuf_len(assoc_req->assoc_req_buf),
@@ -1182,8 +1183,15 @@ QDF_STATUS lim_store_mlo_ie_raw_info(uint8_t *ie, uint8_t *sta_prof_ie,
 				return QDF_STATUS_E_INVAL;
 			}
 
-			for (i = 0; i < pfrm[TAG_LEN_POS]; i++)
+			for (i = 0; i < pfrm[TAG_LEN_POS]; i++) {
+				if (copied > ml_ie_len) {
+					pe_debug("Buf length exceeded, copied %d ml_ie_len %d",
+						 copied, ml_ie_len);
+					qdf_mem_free(buf);
+					return QDF_STATUS_E_INVAL;
+				}
 				sta_data[index++] = buf[copied++];
+			}
 			sta_prof->num_data = index;
 
 			if (copied < ml_ie_len &&
@@ -1302,6 +1310,22 @@ lim_send_bcn_frame_mlo(struct mac_context *mac_ctx,
 	session->mlo_ie_total_len = 0;
 	qdf_mem_zero(&session->mlo_ie, sizeof(session->mlo_ie));
 	status = populate_dot11f_bcn_mlo_ie(mac_ctx, session);
+	if (QDF_IS_STATUS_SUCCESS(status))
+		session->mlo_ie_total_len =
+				lim_caculate_mlo_ie_length(&session->mlo_ie);
+
+	return session->mlo_ie_total_len;
+}
+
+uint16_t
+lim_send_probe_req_frame_mlo(struct mac_context *mac_ctx,
+			     struct pe_session *session)
+{
+	QDF_STATUS status;
+
+	session->mlo_ie_total_len = 0;
+	qdf_mem_zero(&session->mlo_ie, sizeof(session->mlo_ie));
+	status = populate_dot11f_probe_req_mlo_ie(mac_ctx, session);
 	if (QDF_IS_STATUS_SUCCESS(status))
 		session->mlo_ie_total_len =
 				lim_caculate_mlo_ie_length(&session->mlo_ie);

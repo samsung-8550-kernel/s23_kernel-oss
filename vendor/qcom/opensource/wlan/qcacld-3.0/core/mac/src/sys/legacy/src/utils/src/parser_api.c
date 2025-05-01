@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2012-2021 The Linux Foundation. All rights reserved.
- * Copyright (c) 2021-2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2021-2024 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -2925,6 +2925,11 @@ sir_convert_probe_frame2_t2lm_struct(tDot11fProbeResponse *pr,
 		qdf_trace_hex_dump(QDF_MODULE_ID_PE, QDF_TRACE_LEVEL_DEBUG,
 				   &ie[0], pr->t2lm_ie[i].num_data + 3);
 
+		if (ie[TAG_LEN_POS] + 2 > DOT11F_IE_T2LM_IE_MAX_LEN + 3) {
+			pe_debug("Invalid T2LM IE length");
+			return QDF_STATUS_E_PROTO;
+		}
+
 		status = wlan_mlo_parse_t2lm_info(&ie[0], &t2lm);
 		if (QDF_IS_STATUS_ERROR(status)) {
 			pe_debug("Parse T2LM IE fail");
@@ -3829,6 +3834,74 @@ sir_convert_assoc_resp_frame2_mlo_struct(struct mac_context *mac,
 	}
 	return status;
 }
+
+static QDF_STATUS
+sir_convert_assoc_resp_frame2_t2lm_struct(struct mac_context *mac,
+					  uint8_t *frame,
+					  uint32_t frame_len,
+					  struct pe_session *session_entry,
+					  tDot11fAssocResponse *ar,
+					  tpSirAssocRsp p_assoc_rsp)
+{
+	QDF_STATUS status = QDF_STATUS_SUCCESS;
+	struct wlan_t2lm_context *t2lm_ctx;
+	/* add 3 bytes for extn_ie_header */
+	uint8_t ie[DOT11F_IE_T2LM_IE_MAX_LEN + 3];
+	struct wlan_t2lm_info t2lm;
+	uint8_t i;
+
+	t2lm_ctx = &p_assoc_rsp->t2lm_ctx;
+	qdf_mem_zero(&t2lm_ctx->established_t2lm.t2lm,
+		     sizeof(struct wlan_t2lm_info));
+	t2lm_ctx->established_t2lm.t2lm.direction = WLAN_T2LM_INVALID_DIRECTION;
+
+	qdf_mem_zero(&t2lm_ctx->upcoming_t2lm.t2lm,
+		     sizeof(struct wlan_t2lm_info));
+	t2lm_ctx->upcoming_t2lm.t2lm.direction = WLAN_T2LM_INVALID_DIRECTION;
+
+	if (!ar->num_t2lm_ie) {
+		pe_debug("T2LM IEs not present");
+		return status;
+	}
+
+	pe_debug("Number of T2LM IEs in assoc resp %d", ar->num_t2lm_ie);
+	for (i = 0; i < ar->num_t2lm_ie; i++) {
+		qdf_mem_zero(&ie[0], DOT11F_IE_T2LM_IE_MAX_LEN + 3);
+		qdf_mem_zero(&t2lm, sizeof(struct wlan_t2lm_info));
+		ie[ID_POS] = WLAN_ELEMID_EXTN_ELEM;
+		ie[TAG_LEN_POS] = ar->t2lm_ie[i].num_data + 1;
+		ie[IDEXT_POS] = WLAN_EXTN_ELEMID_T2LM;
+		qdf_mem_copy(&ie[3], &ar->t2lm_ie[i].data[0],
+			     ar->t2lm_ie[i].num_data + 3);
+		qdf_trace_hex_dump(QDF_MODULE_ID_PE, QDF_TRACE_LEVEL_DEBUG,
+				   &ie[0], ar->t2lm_ie[i].num_data + 3);
+
+		if (ie[TAG_LEN_POS] + 2 > DOT11F_IE_T2LM_IE_MAX_LEN + 3) {
+			pe_debug("Invalid T2LM IE length");
+			return QDF_STATUS_E_PROTO;
+		}
+
+		status = wlan_mlo_parse_t2lm_info(&ie[0], &t2lm);
+		if (QDF_IS_STATUS_ERROR(status)) {
+			pe_debug("Parse T2LM IE fail");
+			return status;
+		}
+
+		if (!t2lm.mapping_switch_time_present &&
+		    t2lm.expected_duration_present) {
+			qdf_mem_copy(&t2lm_ctx->established_t2lm.t2lm, &t2lm,
+				     sizeof(struct wlan_t2lm_info));
+			pe_debug("Parse established T2LM IE success");
+		} else if (t2lm.mapping_switch_time_present) {
+			qdf_mem_copy(&t2lm_ctx->upcoming_t2lm.t2lm, &t2lm,
+				     sizeof(struct wlan_t2lm_info));
+			pe_debug("Parse upcoming T2LM IE success");
+		}
+		pe_debug("Parse T2LM IE success");
+	}
+	return status;
+}
+
 #else
 static inline QDF_STATUS
 sir_convert_assoc_resp_frame2_mlo_struct(struct mac_context *mac,
@@ -3837,6 +3910,17 @@ sir_convert_assoc_resp_frame2_mlo_struct(struct mac_context *mac,
 					 struct pe_session *session_entry,
 					 tDot11fAssocResponse *ar,
 					 tpSirAssocRsp p_assoc_rsp)
+{
+	return QDF_STATUS_SUCCESS;
+}
+
+static inline QDF_STATUS
+sir_convert_assoc_resp_frame2_t2lm_struct(struct mac_context *mac,
+					  uint8_t *frame,
+					  uint32_t frame_len,
+					  struct pe_session *session_entry,
+					  tDot11fAssocResponse *ar,
+					  tpSirAssocRsp p_assoc_rsp)
 {
 	return QDF_STATUS_SUCCESS;
 }
@@ -4143,6 +4227,8 @@ sir_convert_assoc_resp_frame2_struct(struct mac_context *mac,
 	fils_convert_assoc_rsp_frame2_struct(ar, pAssocRsp);
 	sir_convert_assoc_resp_frame2_mlo_struct(mac, frame, frame_len,
 						 session_entry, ar, pAssocRsp);
+	sir_convert_assoc_resp_frame2_t2lm_struct(mac, frame, frame_len,
+						  session_entry, ar, pAssocRsp);
 	pe_debug("ht %d vht %d vendor vht: cap %d op %d, he %d he 6ghband %d eht %d eht320 %d, max idle: present %d val %d, he mu edca %d wmm %d qos %d",
 		 ar->HTCaps.present, ar->VHTCaps.present,
 		 ar->vendor_vht_ie.VHTCaps.present,
@@ -4473,9 +4559,8 @@ sir_beacon_ie_ese_bcn_report(struct mac_context *mac,
 
 	status = lim_strip_and_decode_eht_cap(pPayload + WLAN_BEACON_IES_OFFSET,
 					      nPayload - WLAN_BEACON_IES_OFFSET,
-					      &pBies->eht_cap,
-					      pBies->he_cap,
-					      freq);
+					      &pBies->eht_cap, pBies->he_cap,
+					      freq, false);
 	if (status != QDF_STATUS_SUCCESS) {
 		pe_err("Failed to extract eht cap");
 		qdf_mem_free(pBies);
@@ -4721,10 +4806,9 @@ static inline void update_bss_color_change_from_beacon_ies(
 {}
 #endif
 
-QDF_STATUS
-sir_parse_beacon_ie(struct mac_context *mac,
-		    tpSirProbeRespBeacon pBeaconStruct,
-		    uint8_t *pPayload, uint32_t nPayload)
+QDF_STATUS sir_parse_beacon_ie(struct mac_context *mac,
+			       tpSirProbeRespBeacon pBeaconStruct,
+			       uint8_t *pPayload, uint32_t nPayload)
 {
 	tDot11fBeaconIEs *pBies;
 	uint32_t status;
@@ -4765,11 +4849,9 @@ sir_parse_beacon_ie(struct mac_context *mac,
 		return QDF_STATUS_E_FAILURE;
 	}
 
-	status = lim_strip_and_decode_eht_cap(pPayload,
-					      nPayload,
-					      &pBies->eht_cap,
-					      pBies->he_cap,
-					      freq);
+	status = lim_strip_and_decode_eht_cap(pPayload, nPayload,
+					      &pBies->eht_cap, pBies->he_cap,
+					      freq, false);
 	if (status != QDF_STATUS_SUCCESS) {
 		pe_err("Failed to extract eht cap");
 		qdf_mem_free(pBies);
@@ -5120,6 +5202,12 @@ sir_convert_beacon_frame2_t2lm_struct(tDot11fBeacon *bcn_frm,
 			     bcn_frm->t2lm_ie[i].num_data + 3);
 		qdf_trace_hex_dump(QDF_MODULE_ID_PE, QDF_TRACE_LEVEL_DEBUG,
 				   &ie[0], bcn_frm->t2lm_ie[i].num_data + 3);
+
+		if (ie[TAG_LEN_POS] + 2 > DOT11F_IE_T2LM_IE_MAX_LEN + 3) {
+			pe_debug("Invalid T2LM IE length");
+			return QDF_STATUS_E_PROTO;
+		}
+
 		status = wlan_mlo_parse_t2lm_info(&ie[0], &t2lm);
 		if (QDF_IS_STATUS_ERROR(status)) {
 			pe_debug("Parse T2LM IE fail");
@@ -5204,10 +5292,9 @@ sir_convert_beacon_frame2_mlo_struct(uint8_t *pframe, uint32_t nframe,
 }
 #endif
 
-QDF_STATUS
-sir_convert_beacon_frame2_struct(struct mac_context *mac,
-				 uint8_t *pFrame,
-				 tpSirProbeRespBeacon pBeaconStruct)
+QDF_STATUS sir_convert_beacon_frame2_struct(struct mac_context *mac,
+					    uint8_t *pFrame,
+					    tpSirProbeRespBeacon pBeaconStruct)
 {
 	tDot11fBeacon *pBeacon;
 	uint32_t status, nPayload;
@@ -5256,8 +5343,7 @@ sir_convert_beacon_frame2_struct(struct mac_context *mac,
 	status = lim_strip_and_decode_eht_cap(pPayload + WLAN_BEACON_IES_OFFSET,
 					      nPayload - WLAN_BEACON_IES_OFFSET,
 					      &pBeacon->eht_cap,
-					      pBeacon->he_cap,
-					      freq);
+					      pBeacon->he_cap, freq, false);
 	if (status != QDF_STATUS_SUCCESS) {
 		pe_err("Failed to extract eht cap");
 		qdf_mem_free(pBeacon);
@@ -7513,6 +7599,12 @@ const uint8_t *lim_get_ext_ie_ptr_from_ext_id(const uint8_t *ie,
 /* 1 byte ext id, 1 byte eht op params, 4 bytes basic EHT MCS and NSS set*/
 #define EHTOP_FIXED_LEN         6
 
+/* EHTOP_FIXED_LEN bytes plus 1 byte chan_width, 2 bytes ccfs0 and ccfs1 */
+#define EHTOP_PARAM_LEN		(EHTOP_FIXED_LEN + 3)
+
+/* EHTOP_PARAM_LEN bytes plus 2 bytes sub chan bitmap */
+#define EHTOP_SUB_CHAN_BITMAP_LEN	(EHTOP_PARAM_LEN + 2)
+
 #define EHTOP_PARAMS_INFOP_IDX  0
 #define EHTOP_PARAMS_INFOP_BITS 1
 
@@ -7591,6 +7683,11 @@ const uint8_t *lim_get_ext_ie_ptr_from_ext_id(const uint8_t *ie,
 
 /* 1 byte ext id, 2 bytes mac cap, 9 bytes phy cap */
 #define EHTCAP_FIXED_LEN 12
+/* EHTCAP_FIXED_LEN bytes plus EHT MCS NSS for except 20 MHz BW*/
+#define EHTCAP_MCS_NSS_MIN_LEN	(EHTCAP_FIXED_LEN + 3)
+/* EHTCAP_FIXED_LEN bytes plus EHT MCS NSS for 20 MHz BW*/
+#define EHTCAP_MCS_NSS_MAX_LEN	(EHTCAP_FIXED_LEN + 4)
+
 #define EHTCAP_MACBYTE_IDX0      0
 #define EHTCAP_MACBYTE_IDX1      1
 
@@ -8185,8 +8282,18 @@ QDF_STATUS lim_ieee80211_unpack_ehtop(const uint8_t *eht_op_ie,
 	struct wlan_ie_ehtops *ehtop = (struct wlan_ie_ehtops *)eht_op_ie;
 	uint8_t i;
 
-	if (!eht_op_ie || !(ehtop->elem_id == DOT11F_EID_EHT_OP &&
-			    ehtop->elem_id_extn == 0x6a)) {
+	if (!eht_op_ie) {
+		pe_err("Invalid EHT op IE");
+		return QDF_STATUS_E_INVAL;
+	}
+
+	if (!ehtop->elem_len || ehtop->elem_len < EHTOP_FIXED_LEN) {
+		pe_err("Invalid EHT op IE len %d", ehtop->elem_len);
+		return QDF_STATUS_E_INVAL;
+	}
+
+	if (!(ehtop->elem_id == DOT11F_EID_EHT_OP &&
+	      ehtop->elem_id_extn == 0x6a)) {
 		pe_err("Invalid EHT op IE");
 		return QDF_STATUS_E_INVAL;
 	}
@@ -8247,6 +8354,12 @@ QDF_STATUS lim_ieee80211_unpack_ehtop(const uint8_t *eht_op_ie,
 			     EHTOP_TX_MCS_NSS_MAP_BITS);
 
 	if (dot11f_eht_op->eht_op_information_present) {
+		if (ehtop->elem_len < EHTOP_PARAM_LEN) {
+			pe_err("Invalid length for EHT_OP param len %d",
+			       ehtop->elem_len);
+			return QDF_STATUS_E_INVAL;
+		}
+
 		dot11f_eht_op->channel_width =
 			EHTOP_INFO_CHANWIDTH_GET_FROM_IE(ehtop->control);
 
@@ -8255,6 +8368,12 @@ QDF_STATUS lim_ieee80211_unpack_ehtop(const uint8_t *eht_op_ie,
 		dot11f_eht_op->ccfs1 = ehtop->ccfs1;
 
 		if (dot11f_eht_op->disabled_sub_chan_bitmap_present) {
+			if (ehtop->elem_len != EHTOP_SUB_CHAN_BITMAP_LEN) {
+				pe_err("Invalid length for EHT_OP sub chan bitmap len %d",
+				       ehtop->elem_len);
+				return QDF_STATUS_E_INVAL;
+			}
+
 			for (i = 0; i < WLAN_MAX_DISABLED_SUB_CHAN_BITMAP;
 			     i++) {
 				dot11f_eht_op->disabled_sub_chan_bitmap[0][i] =
@@ -8270,14 +8389,25 @@ static
 QDF_STATUS lim_ieee80211_unpack_ehtcap(const uint8_t *eht_cap_ie,
 				       tDot11fIEeht_cap *dot11f_eht_cap,
 				       tDot11fIEhe_cap dot11f_he_cap,
-				       bool is_band_2g)
+				       bool is_band_2g,
+				       bool is_eht_cap_from_sta)
 {
 	struct wlan_ie_ehtcaps *ehtcap  = (struct wlan_ie_ehtcaps *)eht_cap_ie;
-	uint32_t idx = 0;
+	uint32_t idx = 0, var_length = 0;
 	uint32_t mcs_map_len;
 
-	if (!eht_cap_ie || !(ehtcap->elem_id == DOT11F_EID_EHT_CAP &&
-			     ehtcap->elem_id_extn == 0x6c)) {
+	if (!eht_cap_ie) {
+		pe_err("Invalid EHT cap IE");
+		return QDF_STATUS_E_INVAL;
+	}
+
+	if (!ehtcap->elem_len || ehtcap->elem_len < EHTCAP_FIXED_LEN) {
+		pe_err("Invalid EHT cap IE len %d", ehtcap->elem_len);
+		return QDF_STATUS_E_INVAL;
+	}
+
+	if (!(ehtcap->elem_id == DOT11F_EID_EHT_CAP &&
+	      ehtcap->elem_id_extn == 0x6c)) {
 		pe_err("Invalid EHT cap IE");
 		return QDF_STATUS_E_INVAL;
 	}
@@ -8486,10 +8616,30 @@ QDF_STATUS lim_ieee80211_unpack_ehtcap(const uint8_t *eht_cap_ie,
 			EHTCAP_PHY_RX_4K_QAM_IN_WIDER_BW_DL_OFDMA_GET_FROM_IE(
 					ehtcap->eht_phy_cap.phy_cap_bytes);
 
+
+	/**
+	 * After fixed length of parameters will have variable
+	 * length of 0 or 3 or 6 or 9. There is no bit or field will
+	 * represent this variable length, so to get this remaining length
+	 * calculating by offsetof with the structure wlan_ie_ehtcaps.
+	 * offsetof will point to the mcs_nss_map_bytes which after
+	 * the fixed length of parameters and -2 is to
+	 * exclude ELEM_ID and ELEM_LEN of 2 bytes which is not
+	 * not included in the element length.
+	 */
+	var_length = ehtcap->elem_len -
+		     (offsetof(struct wlan_ie_ehtcaps, mcs_nss_map_bytes) - 2);
+
 	/* Fill EHT MCS and NSS set field */
 	if ((is_band_2g && !dot11f_he_cap.chan_width_0) ||
 	    (!is_band_2g && !dot11f_he_cap.chan_width_1 &&
 	     !dot11f_he_cap.chan_width_2 && !dot11f_he_cap.chan_width_3)) {
+		if (ehtcap->elem_len < EHTCAP_MCS_NSS_MIN_LEN) {
+			pe_err("Invalid EHT cap IE len %d for MCS NSS 20 MHz BW",
+			       ehtcap->elem_len);
+			return QDF_STATUS_E_INVAL;
+		}
+
 		dot11f_eht_cap->bw_20_rx_max_nss_for_mcs_0_to_7 =
 			ehtcap_ie_get(ehtcap->mcs_nss_map_bytes[idx],
 				      EHTCAP_RX_MCS_NSS_MAP_IDX,
@@ -8499,6 +8649,15 @@ QDF_STATUS lim_ieee80211_unpack_ehtcap(const uint8_t *eht_cap_ie,
 			ehtcap_ie_get(ehtcap->mcs_nss_map_bytes[idx],
 				      EHTCAP_TX_MCS_NSS_MAP_IDX,
 				      EHTCAP_TX_MCS_NSS_MAP_BITS);
+
+		if (is_eht_cap_from_sta) {
+			if (ehtcap->elem_len != EHTCAP_MCS_NSS_MAX_LEN) {
+				pe_err("Invalid EHT cap IE len %d for MCS NSS STA",
+				       ehtcap->elem_len);
+				return QDF_STATUS_E_INVAL;
+			}
+			idx++;
+		}
 
 		dot11f_eht_cap->bw_20_rx_max_nss_for_mcs_8_and_9 =
 			ehtcap_ie_get(ehtcap->mcs_nss_map_bytes[idx],
@@ -8533,6 +8692,12 @@ QDF_STATUS lim_ieee80211_unpack_ehtcap(const uint8_t *eht_cap_ie,
 				      EHTCAP_TX_MCS_NSS_MAP_BITS);
 		idx++;
 	} else {
+		if (ehtcap->elem_len < EHTCAP_MCS_NSS_MIN_LEN) {
+			pe_err("Invalid EHT cap IE len %d for MCS NSS",
+			       ehtcap->elem_len);
+			return QDF_STATUS_E_INVAL;
+		}
+
 		if ((is_band_2g && dot11f_he_cap.chan_width_0) ||
 		    (!is_band_2g && dot11f_he_cap.chan_width_1)) {
 			dot11f_eht_cap->bw_le_80_rx_max_nss_for_mcs_0_to_9 =
@@ -8585,6 +8750,14 @@ QDF_STATUS lim_ieee80211_unpack_ehtcap(const uint8_t *eht_cap_ie,
 			idx++;
 		}
 
+		/* If 160 MHz BW is supported more 3 bytes to read */
+		if (dot11f_he_cap.chan_width_2 == 1 &&
+		    ((idx + 3) > var_length)) {
+			pe_err("Invalid EHT cap IE len %d for ch_width2",
+			       ehtcap->elem_len);
+			return QDF_STATUS_E_INVAL;
+		}
+
 		if (dot11f_he_cap.chan_width_2 == 1) {
 			dot11f_eht_cap->bw_160_rx_max_nss_for_mcs_0_to_9 =
 				ehtcap_ie_get(ehtcap->mcs_nss_map_bytes[idx],
@@ -8618,6 +8791,14 @@ QDF_STATUS lim_ieee80211_unpack_ehtcap(const uint8_t *eht_cap_ie,
 					      EHTCAP_TX_MCS_NSS_MAP_IDX,
 					      EHTCAP_TX_MCS_NSS_MAP_BITS);
 			idx++;
+		}
+
+		/* If 320 MHz BW is supported more 3 bytes to read */
+		if (dot11f_eht_cap->support_320mhz_6ghz &&
+		    ((idx + 3) > var_length)) {
+			pe_err("Invalid EHT cap IE len %d for 320 MHz BW",
+			       ehtcap->elem_len);
+			return QDF_STATUS_E_INVAL;
 		}
 
 		if (dot11f_eht_cap->support_320mhz_6ghz) {
@@ -8667,7 +8848,7 @@ QDF_STATUS lim_ieee80211_unpack_ehtcap(const uint8_t *eht_cap_ie,
 QDF_STATUS lim_strip_and_decode_eht_cap(uint8_t *ie, uint16_t ie_len,
 					tDot11fIEeht_cap *dot11f_eht_cap,
 					tDot11fIEhe_cap dot11f_he_cap,
-					uint16_t freq)
+					uint16_t freq, bool is_eht_cap_from_sta)
 {
 	const uint8_t *eht_cap_ie;
 	bool is_band_2g;
@@ -8683,8 +8864,8 @@ QDF_STATUS lim_strip_and_decode_eht_cap(uint8_t *ie, uint16_t ie_len,
 	is_band_2g = WLAN_REG_IS_24GHZ_CH_FREQ(freq);
 
 	status = lim_ieee80211_unpack_ehtcap(eht_cap_ie, dot11f_eht_cap,
-					     dot11f_he_cap,
-					     is_band_2g);
+					     dot11f_he_cap, is_band_2g,
+					     is_eht_cap_from_sta);
 
 	if (status != QDF_STATUS_SUCCESS) {
 		pe_err("Failed to extract eht cap");
@@ -9296,6 +9477,104 @@ QDF_STATUS populate_dot11f_eht_operation(struct mac_context *mac_ctx,
 #endif /* WLAN_FEATURE_11BE */
 
 #ifdef WLAN_FEATURE_11BE_MLO
+QDF_STATUS
+populate_dot11f_probe_req_mlo_ie(struct mac_context *mac,
+				 struct pe_session *session)
+{
+	struct wlan_mlo_ie *mlo_ie;
+	uint8_t *p_ml_ie, *sta_data;
+	uint16_t len_remaining, sta_len_left;
+	struct wlan_mlo_sta_profile *sta_pro;
+	int num_sta_pro = 0;
+	struct mlo_partner_info partner_info;
+	uint8_t link;
+
+	if (!session || !session->vdev || !session->vdev->mlo_dev_ctx) {
+		pe_err("Null value");
+		return QDF_STATUS_E_NULL_VALUE;
+	}
+
+	mlo_ie = &session->mlo_ie;
+	p_ml_ie = mlo_ie->data;
+	len_remaining = sizeof(mlo_ie->data);
+
+	*p_ml_ie++ = WLAN_ELEMID_EXTN_ELEM;
+	len_remaining--;
+
+	/* set length later */
+	*p_ml_ie++ = 0;
+	len_remaining--;
+
+	*p_ml_ie++ = WLAN_EXTN_ELEMID_MULTI_LINK;
+	len_remaining--;
+
+	/* Set ML IE multi link control bitmap:
+	 * ML probe variant type = 1
+	 * In presence bitmap, set MLD ID presence bit = 1
+	 */
+	mlo_ie->type = WLAN_ML_VARIANT_PROBEREQ;
+	QDF_SET_BITS(*(uint16_t *)p_ml_ie, WLAN_ML_CTRL_TYPE_IDX,
+		     WLAN_ML_CTRL_TYPE_BITS, mlo_ie->type);
+	QDF_SET_BITS(*(uint16_t *)p_ml_ie, WLAN_ML_CTRL_PBM_IDX,
+		     WLAN_ML_CTRL_PBM_BITS, 1);
+
+	p_ml_ie += WLAN_ML_CTRL_SIZE;
+	len_remaining -= WLAN_ML_CTRL_SIZE;
+
+	/* common info length is 2 */
+	*p_ml_ie++ = 2;
+	len_remaining--;
+
+	/* mld id is always 0 for tx link for SAP or AP */
+	*p_ml_ie++ = 0;
+	len_remaining--;
+
+	mlo_ie->num_data = p_ml_ie - mlo_ie->data;
+
+	if (wlan_vdev_mlme_cap_get(session->vdev,
+				   WLAN_VDEV_C_EXCL_STA_PROF_PRB_REQ)) {
+		pe_debug("Do not populate sta profile in MLO IE");
+		goto no_sta_prof;
+	}
+	pe_debug("Populate sta profile in MLO IE");
+
+	partner_info = session->lim_join_req->partner_info;
+	for (link = 0; link < partner_info.num_partner_links; link++) {
+		sta_pro = &mlo_ie->sta_profile[num_sta_pro];
+		sta_data = sta_pro->data;
+		sta_len_left = sizeof(sta_pro->data);
+
+		*sta_data++ = WLAN_ML_LINFO_SUBELEMID_PERSTAPROFILE;
+		sta_len_left--;
+		/* length of subelement, filled at last */
+		*sta_data++ = 0;
+		sta_len_left--;
+
+		QDF_SET_BITS(*(uint16_t *)sta_data,
+			     WLAN_ML_BV_LINFO_PERSTAPROF_STACTRL_LINKID_IDX,
+			     WLAN_ML_BV_LINFO_PERSTAPROF_STACTRL_LINKID_BITS,
+			     partner_info.partner_link_info[link].link_id);
+
+		QDF_SET_BITS(*(uint16_t *)sta_data,
+			     WLAN_ML_BV_LINFO_PERSTAPROF_STACTRL_CMPLTPROF_IDX,
+			     WLAN_ML_BV_LINFO_PERSTAPROF_STACTRL_CMPLTPROF_BITS,
+			     1);
+		sta_data += WLAN_ML_BV_LINFO_PERSTAPROF_STACTRL_SIZE;
+		sta_len_left -= WLAN_ML_BV_LINFO_PERSTAPROF_STACTRL_SIZE;
+
+		sta_pro->num_data = sta_data - sta_pro->data;
+		sta_pro->data[TAG_LEN_POS] = sta_pro->num_data - MIN_IE_LEN;
+
+		num_sta_pro++;
+	}
+
+no_sta_prof:
+	mlo_ie->num_sta_profile = num_sta_pro;
+	session->lim_join_req->is_ml_probe_req_sent = true;
+
+	return QDF_STATUS_SUCCESS;
+}
+
 QDF_STATUS populate_dot11f_assoc_rsp_mlo_ie(struct mac_context *mac_ctx,
 					    struct pe_session *session,
 					    tpDphHashNode sta,
@@ -10420,7 +10699,7 @@ QDF_STATUS wlan_parse_bss_description_ies(struct mac_context *mac_ctx,
 	status = lim_strip_and_decode_eht_cap((uint8_t *)bss_desc->ieFields,
 					      ie_len, &ie_struct->eht_cap,
 					      ie_struct->he_cap,
-					      bss_desc->chan_freq);
+					      bss_desc->chan_freq, false);
 	if (status != QDF_STATUS_SUCCESS) {
 		pe_err("Failed to extract eht cap");
 		return QDF_STATUS_E_FAILURE;
@@ -11130,6 +11409,8 @@ QDF_STATUS populate_dot11f_btm_extended_caps(struct mac_context *mac_ctx,
 {
 	struct s_ext_cap *p_ext_cap;
 	QDF_STATUS  status;
+	bool is_disable_btm;
+	struct cm_roam_values_copy temp;
 
 	dot11f->num_bytes = DOT11F_IE_EXTCAP_MAX_LEN;
 	p_ext_cap = (struct s_ext_cap *)dot11f->bytes;
@@ -11138,12 +11419,31 @@ QDF_STATUS populate_dot11f_btm_extended_caps(struct mac_context *mac_ctx,
 	status = cm_akm_roam_allowed(mac_ctx->psoc, pe_session->vdev);
 	if (QDF_IS_STATUS_ERROR(status)) {
 		p_ext_cap->bss_transition = 0;
-		pe_debug("Disable btm for roaming not suppprted");
-	} else {
-		p_ext_cap->bss_transition = 1;
-		pe_debug("Enable btm for roaming suppprted");
+		pe_debug("vdev:%d, Disable btm for roaming not suppprted",
+			 pe_session->vdev_id);
 	}
 
+	wlan_cm_roam_cfg_get_value(mac_ctx->psoc, pe_session->vdev_id,
+				   IS_DISABLE_BTM, &temp);
+	is_disable_btm = temp.bool_value;
+	if (is_disable_btm) {
+		pe_debug("vdev:%d, Disable BTM as BTM roam disabled by user",
+			 pe_session->vdev_id);
+		p_ext_cap->bss_transition = 0;
+	}
+
+	if (!pe_session->lim_join_req)
+		goto compute_len;
+
+	if (p_ext_cap->bss_transition && !cm_is_open_mode(pe_session->vdev) &&
+	    pe_session->lim_join_req->bssDescription.mbo_oce_enabled_ap &&
+	    !pe_session->limRmfEnabled) {
+		pe_debug("vdev:%d, Disable BTM as MBO AP doesn't support PMF",
+			 pe_session->vdev_id);
+		p_ext_cap->bss_transition = 0;
+	}
+
+compute_len:
 	dot11f->num_bytes = lim_compute_ext_cap_ie_length(dot11f);
 	if (!dot11f->num_bytes) {
 		dot11f->present = 0;

@@ -1467,6 +1467,8 @@ static void mlme_init_dfs_cfg(struct wlan_objmgr_psoc *psoc,
 		cfg_get(psoc, CFG_SAP_TX_LEAKAGE_THRESHOLD);
 	dfs_cfg->dfs_pri_multiplier =
 		cfg_get(psoc, CFG_DFS_RADAR_PRI_MULTIPLIER);
+	dfs_cfg->dfs_discard_mode =
+		cfg_get(psoc, CFG_DISCARD_DFS_CHANNEL_FOR_MODE);
 }
 
 static void mlme_init_feature_flag_in_cfg(

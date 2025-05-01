@@ -854,6 +854,8 @@ QDF_STATUS cm_roam_update_vendor_handoff_config(struct wlan_objmgr_psoc *psoc,
 		case ROAM_VENDOR_CONTROL_PARAM_TRIGGER:
 			cfg_params->neighbor_lookup_threshold =
 							abs(param_value);
+			cfg_params->next_rssi_threshold =
+					cfg_params->neighbor_lookup_threshold;
 			break;
 		case ROAM_VENDOR_CONTROL_PARAM_DELTA:
 			cfg_params->roam_rssi_diff = param_value;
@@ -2187,12 +2189,11 @@ cm_update_rso_freq_list(struct rso_config *rso_cfg,
 	}
 }
 
-static void
-cm_fill_rso_channel_list(struct wlan_objmgr_psoc *psoc,
-			 struct wlan_objmgr_vdev *vdev,
-			 struct rso_config *rso_cfg,
-			 struct wlan_roam_scan_channel_list *chan_info,
-			 uint8_t reason)
+void cm_fill_rso_channel_list(struct wlan_objmgr_psoc *psoc,
+			      struct wlan_objmgr_vdev *vdev,
+			      struct rso_config *rso_cfg,
+			      struct wlan_roam_scan_channel_list *chan_info,
+			      uint8_t reason)
 {
 	QDF_STATUS status;
 	uint8_t ch_cache_str[128] = {0};
@@ -2841,8 +2842,9 @@ cm_update_btm_offload_config(struct wlan_objmgr_psoc *psoc,
 	uint8_t bssid[QDF_MAC_ADDR_SIZE];
 	struct cm_roam_values_copy temp;
 	bool is_hs_20_ap, is_pmf_enabled, is_open_connection = false;
-	uint8_t vdev_id;
 	uint32_t mbo_oce_enabled_ap;
+	uint8_t vdev_id = wlan_vdev_get_id(vdev);
+	bool is_disable_btm, assoc_btm_cap;
 
 	mlme_obj = mlme_get_psoc_ext_obj(psoc);
 	if (!mlme_obj)
@@ -2850,18 +2852,20 @@ cm_update_btm_offload_config(struct wlan_objmgr_psoc *psoc,
 
 	btm_cfg = &mlme_obj->cfg.btm;
 	*btm_offload_config = btm_cfg->btm_offload_config;
-
 	/* Return if INI is disabled */
 	if (!(*btm_offload_config))
 		return;
 
-	if (!wlan_cm_get_assoc_btm_cap(vdev)) {
-		mlme_debug("BTM not supported, disable BTM offload");
+	wlan_cm_roam_cfg_get_value(psoc, vdev_id, IS_DISABLE_BTM, &temp);
+	is_disable_btm = temp.bool_value;
+	assoc_btm_cap = wlan_cm_get_assoc_btm_cap(vdev);
+	if (!assoc_btm_cap || is_disable_btm) {
+		mlme_debug("disable btm offload vdev:%d btm_cap: %d is_btm: %d",
+			   vdev_id, assoc_btm_cap, is_disable_btm);
 		*btm_offload_config = 0;
 		return;
 	}
 
-	vdev_id = wlan_vdev_get_id(vdev);
 	wlan_cm_roam_cfg_get_value(psoc, vdev_id, HS_20_AP, &temp);
 	is_hs_20_ap = temp.bool_value;
 
@@ -5048,6 +5052,7 @@ QDF_STATUS cm_neighbor_roam_update_config(struct wlan_objmgr_pdev *pdev,
 	case REASON_LOOKUP_THRESH_CHANGED:
 		old_value = cfg_params->neighbor_lookup_threshold;
 		cfg_params->neighbor_lookup_threshold = value;
+		cfg_params->next_rssi_threshold = value;
 		break;
 	case REASON_OPPORTUNISTIC_THRESH_DIFF_CHANGED:
 		old_value = cfg_params->opportunistic_threshold_diff;
@@ -5112,6 +5117,8 @@ cm_restore_default_roaming_params(struct wlan_mlme_psoc_ext_obj *mlme_obj,
 	cfg_params->neighbor_scan_period =
 			mlme_obj->cfg.lfr.neighbor_scan_timer_period;
 	cfg_params->neighbor_lookup_threshold =
+			mlme_obj->cfg.lfr.neighbor_lookup_rssi_threshold;
+	cfg_params->next_rssi_threshold =
 			mlme_obj->cfg.lfr.neighbor_lookup_rssi_threshold;
 	cfg_params->roam_rssi_diff =
 			mlme_obj->cfg.lfr.roam_rssi_diff;
@@ -5284,6 +5291,41 @@ bool cm_lookup_pmkid_using_bssid(struct wlan_objmgr_psoc *psoc,
 	return true;
 }
 
+/**
+ * cm_roam_clear_is_disable_btm_flag - API to clear is_disable_btm flag
+ * @pdev: pdev pointer
+ * @vdev_id: dvev ID
+ *
+ * Return: None
+ */
+static void cm_roam_clear_is_disable_btm_flag(struct wlan_objmgr_pdev *pdev,
+					      uint8_t vdev_id)
+{
+	struct rso_config *rso_cfg;
+	struct wlan_objmgr_vdev *vdev;
+
+	vdev = wlan_objmgr_get_vdev_by_id_from_pdev(pdev, vdev_id,
+						    WLAN_MLME_CM_ID);
+	if (!vdev) {
+		mlme_err("vdev object is NULL for vdev %d", vdev_id);
+		return;
+	}
+
+	rso_cfg = wlan_cm_get_rso_config(vdev);
+	if (!rso_cfg) {
+		mlme_debug("vdev: %d rso_cfg is NULL", vdev_id);
+		goto release_ref;
+	}
+
+	if (rso_cfg->is_disable_btm) {
+		mlme_debug("vdev: %d clear is_disable_btm flag", vdev_id);
+		rso_cfg->is_disable_btm = false;
+	}
+
+release_ref:
+	wlan_objmgr_vdev_release_ref(vdev, WLAN_MLME_CM_ID);
+}
+
 void cm_roam_restore_default_config(struct wlan_objmgr_pdev *pdev,
 				    uint8_t vdev_id)
 {
@@ -5299,6 +5341,8 @@ void cm_roam_restore_default_config(struct wlan_objmgr_pdev *pdev,
 	mlme_obj = mlme_get_psoc_ext_obj(psoc);
 	if (!mlme_obj)
 		return;
+
+	cm_roam_clear_is_disable_btm_flag(pdev, vdev_id);
 
 	if (mlme_obj->cfg.lfr.roam_scan_offload_enabled) {
 		/*

@@ -2978,7 +2978,8 @@ static void lim_update_qos(struct mac_context *mac_ctx,
 
 QDF_STATUS
 lim_fill_pe_session(struct mac_context *mac_ctx, struct pe_session *session,
-		    struct bss_description *bss_desc)
+		    struct bss_description *bss_desc,
+		    enum wlan_status_code *req_fail_status_code)
 {
 	uint8_t bss_chan_id;
 	tDot11fBeaconIEs *ie_struct;
@@ -2999,9 +3000,7 @@ lim_fill_pe_session(struct mac_context *mac_ctx, struct pe_session *session,
 	struct ps_params *ps_param =
 				&ps_global_info->ps_params[session->vdev_id];
 	uint32_t timeout;
-	uint8_t programmed_country[REG_ALPHA2_LEN + 1];
 	enum reg_6g_ap_type power_type_6g;
-	bool ctry_code_match;
 	struct cm_roam_values_copy temp;
 	uint32_t neighbor_lookup_threshold;
 	uint32_t hi_rssi_scan_rssi_delta;
@@ -3262,19 +3261,19 @@ lim_fill_pe_session(struct mac_context *mac_ctx, struct pe_session *session,
 	if (wlan_reg_is_6ghz_chan_freq(bss_desc->chan_freq)) {
 		if (!ie_struct->Country.present)
 			pe_debug("Channel is 6G but country IE not present");
-		wlan_reg_read_current_country(mac_ctx->psoc,
-					      programmed_country);
-		status = wlan_reg_get_6g_power_type_for_ctry(
+		status = wlan_reg_get_best_6g_power_type(
 				mac_ctx->psoc, mac_ctx->pdev,
-				ie_struct->Country.country,
-				programmed_country, &power_type_6g,
-				&ctry_code_match, session->ap_power_type);
+				&power_type_6g,
+				session->ap_defined_power_type_6g);
 		if (QDF_IS_STATUS_ERROR(status)) {
+			if (req_fail_status_code)
+				*req_fail_status_code =
+					STATUS_PWR_CAPABILITY_NOT_VALID;
 			status = QDF_STATUS_E_NOSUPPORT;
 			goto send;
 		}
-		session->ap_power_type_6g = power_type_6g;
-		session->same_ctry_code = ctry_code_match;
+
+		session->best_6g_power_type = power_type_6g;
 
 		lim_iterate_triplets(ie_struct->Country);
 
@@ -4186,6 +4185,7 @@ lim_fill_session_params(struct mac_context *mac_ctx,
 	struct mlme_legacy_priv *mlme_priv;
 	uint32_t assoc_ie_len;
 	bool eht_capab;
+	enum wlan_status_code req_fail_status_code = STATUS_UNSPECIFIED_FAILURE;
 
 	ie_len = util_scan_entry_ie_len(req->entry);
 	bss_len = (uint16_t)(offsetof(struct bss_description,
@@ -4226,15 +4226,14 @@ lim_fill_session_params(struct mac_context *mac_ctx,
 	session->ssId.length = req->entry->ssid.length;
 	qdf_mem_copy(session->ssId.ssId, req->entry->ssid.ssid,
 		     session->ssId.length);
-
 	session->force_24ghz_in_ht20 = req->force_24ghz_in_ht20;
-
-	status = lim_fill_pe_session(mac_ctx, session, bss_desc);
+	status = lim_fill_pe_session(mac_ctx, session, bss_desc, NULL);
 	if (QDF_IS_STATUS_ERROR(status)) {
 		pe_err("Failed to fill pe session vdev id %d",
 		       session->vdev_id);
 		qdf_mem_free(session->lim_join_req);
 		session->lim_join_req = NULL;
+		req->req_fail_status_code = req_fail_status_code;
 		return QDF_STATUS_E_FAILURE;
 	}
 
@@ -5502,7 +5501,7 @@ void lim_process_tpe_ie_from_beacon(struct mac_context *mac,
 
 	status = lim_strip_and_decode_eht_cap(buf, buf_len, &bcn_ie->eht_cap,
 					      bcn_ie->he_cap,
-					      session->curr_op_freq);
+					      session->curr_op_freq, false);
 	if (status != QDF_STATUS_SUCCESS) {
 		pe_err("Failed to extract eht cap");
 		return;
@@ -5590,9 +5589,7 @@ uint8_t lim_get_max_tx_power(struct mac_context *mac,
 
 void lim_calculate_tpc(struct mac_context *mac,
 		       struct pe_session *session,
-		       bool is_pwr_constraint_absolute,
-		       uint8_t ap_pwr_type,
-		       bool ctry_code_match)
+		       bool is_pwr_constraint_absolute)
 {
 	bool is_psd_power = false;
 	bool is_tpe_present = false, is_6ghz_freq = false;
@@ -5640,9 +5637,9 @@ void lim_calculate_tpc(struct mac_context *mac,
 		skip_tpe = wlan_mlme_skip_tpe(mac->psoc);
 	} else {
 		is_6ghz_freq = true;
-		/* Power mode calculation for 6G*/
-		ap_power_type_6g = session->ap_power_type;
+		/* Power mode calculation for 6 GHz STA*/
 		if (LIM_IS_STA_ROLE(session)) {
+			ap_power_type_6g = session->best_6g_power_type;
 			wlan_mlme_get_safe_mode_enable(mac->psoc,
 						       &safe_mode_enable);
 			wlan_mlme_is_rf_test_mode_enabled(mac->psoc,
@@ -5651,18 +5648,8 @@ void lim_calculate_tpc(struct mac_context *mac,
 			 * set LPI power if safe mode is enabled OR RF test
 			 * mode is enabled.
 			 */
-			if (rf_test_mode || safe_mode_enable) {
+			if (rf_test_mode || safe_mode_enable)
 				ap_power_type_6g = REG_INDOOR_AP;
-			} else {
-				if (!session->lim_join_req) {
-					if (!ctry_code_match)
-						ap_power_type_6g = ap_pwr_type;
-				} else {
-					if (!session->same_ctry_code)
-						ap_power_type_6g =
-						session->ap_power_type_6g;
-				}
-			}
 		}
 	}
 
@@ -5776,6 +5763,10 @@ void lim_calculate_tpc(struct mac_context *mac,
 						       local_constraint);
 			else
 				max_tx_power = reg_max - local_constraint;
+
+			if (!max_tx_power)
+				max_tx_power = reg_max;
+
 		}
 		/* If TPE is present */
 		if (is_tpe_present && !skip_tpe) {

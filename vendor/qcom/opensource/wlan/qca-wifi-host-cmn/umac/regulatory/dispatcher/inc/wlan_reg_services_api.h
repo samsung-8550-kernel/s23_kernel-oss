@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2017-2021 The Linux Foundation. All rights reserved.
- * Copyright (c) 2021-2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2021-2024 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -585,24 +585,19 @@ QDF_STATUS wlan_reg_read_current_country(struct wlan_objmgr_psoc *psoc,
 
 #ifdef CONFIG_REG_CLIENT
 /**
- * wlan_reg_get_6g_power_type_for_ctry() - Return power type for 6G based
- * on country IE
+ * wlan_reg_get_best_6g_power_type() - Return best power type for 6GHz
+ * connection
  * @psoc: pointer to psoc
  * @pdev: pointer to pdev
- * @ap_ctry: pointer to country string in country IE
- * @sta_ctry: pointer to sta programmed country
  * @pwr_type_6g: pointer to 6G power type
- * @ctry_code_match: Check for country IE and sta country code match
  * @ap_pwr_type: AP's power type for 6G as advertised in HE ops IE
  * Return: QDF_STATUS
  */
 QDF_STATUS
-wlan_reg_get_6g_power_type_for_ctry(struct wlan_objmgr_psoc *psoc,
-				    struct wlan_objmgr_pdev *pdev,
-				    uint8_t *ap_ctry, uint8_t *sta_ctry,
-				    enum reg_6g_ap_type *pwr_type_6g,
-				    bool *ctry_code_match,
-				    enum reg_6g_ap_type ap_pwr_type);
+wlan_reg_get_best_6g_power_type(struct wlan_objmgr_psoc *psoc,
+				struct wlan_objmgr_pdev *pdev,
+				enum reg_6g_ap_type *pwr_type_6g,
+				enum reg_6g_ap_type ap_pwr_type);
 #endif
 
 #ifdef CONFIG_CHAN_FREQ_API
@@ -2167,6 +2162,17 @@ bool wlan_reg_is_6ghz_op_class(struct wlan_objmgr_pdev *pdev,
 bool wlan_reg_is_6ghz_supported(struct wlan_objmgr_psoc *psoc);
 #endif
 
+/**
+ * wlan_reg_chan_opclass_to_freq() - Convert channel number and opclass to frequency
+ * @chan: IEEE Channel Number.
+ * @op_class: Opclass.
+ * @global_tbl_lookup: Global table lookup.
+ *
+ * Return: Channel center frequency else return 0.
+ */
+uint16_t wlan_reg_chan_opclass_to_freq(uint8_t chan, uint8_t op_class,
+				       bool global_tbl_lookup);
+
 #ifdef HOST_OPCLASS_EXT
 /**
  * wlan_reg_country_chan_opclass_to_freq() - Convert channel number to
@@ -2189,19 +2195,36 @@ wlan_reg_country_chan_opclass_to_freq(struct wlan_objmgr_pdev *pdev,
 				      const uint8_t country[3],
 				      uint8_t chan, uint8_t op_class,
 				      bool strict);
-#endif
 
 /**
- * reg_chan_opclass_to_freq() - Convert channel number and opclass to frequency
- * @chan: IEEE Channel Number.
- * @op_class: Opclass.
- * @global_tbl_lookup: Global table lookup.
+ * wlan_reg_chan_opclass_to_freq_prefer_global() - API to find the operating
+ * channel freq from chan num and opclass.
+ * @pdev: PDEV object manager pointer
+ * @country: Two byte CC pointer
+ * @chan_num: Channel index number.
+ * @opclass: Operating class
  *
- * Return: Channel center frequency else return 0.
+ * The API will check the global operating class table to convert the opclass
+ * chan_num tuple to channel frequency and if there is not entry in global
+ * opclass table for this tuple and if @country is not %NULL, then attempts to
+ * convert the opclass and chan_num to channel frequency using the country
+ * specific opclass table.
+ *
+ * Return: Valid channel frequency if success else zero
  */
-uint16_t wlan_reg_chan_opclass_to_freq(uint8_t chan,
-				       uint8_t op_class,
-				       bool global_tbl_lookup);
+qdf_freq_t
+wlan_reg_chan_opclass_to_freq_prefer_global(struct wlan_objmgr_pdev *pdev,
+					    const uint8_t *country,
+					    uint8_t chan_num, uint8_t opclass);
+#else
+static inline qdf_freq_t
+wlan_reg_chan_opclass_to_freq_prefer_global(struct wlan_objmgr_pdev *pdev,
+					    const uint8_t *country,
+					    uint8_t chan_num, uint8_t opclass)
+{
+	return wlan_reg_chan_opclass_to_freq(chan_num, opclass, true);
+}
+#endif
 
 /**
  * wlan_reg_chan_opclass_to_freq_auto() - Convert channel number and opclass to

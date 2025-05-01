@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2017-2021 The Linux Foundation. All rights reserved.
- * Copyright (c) 2021-2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2021-2024 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -91,14 +91,52 @@ struct meta_rnr_channel *scm_get_chan_meta(struct wlan_objmgr_psoc *psoc,
 	return NULL;
 }
 
-static void scm_add_rnr_channel_db(struct wlan_objmgr_psoc *psoc,
+static bool scm_is_rnr_present(struct meta_rnr_channel *chan,
+			       struct qdf_mac_addr *bssid,
+			       uint32_t short_ssid)
+{
+	qdf_list_node_t *cur_node = NULL, *next_node = NULL;
+	struct scan_rnr_node *rnr_node;
+	QDF_STATUS status;
+
+	if (!chan || qdf_list_empty(&chan->rnr_list))
+		return false;
+
+	qdf_list_peek_front(&chan->rnr_list, &cur_node);
+	while (cur_node) {
+		rnr_node = qdf_container_of(cur_node,
+					    struct scan_rnr_node,
+					    node);
+		if (qdf_is_macaddr_equal(&rnr_node->entry.bssid, bssid) &&
+		    rnr_node->entry.short_ssid == short_ssid)
+			return true;
+
+		status = qdf_list_peek_next(&chan->rnr_list, cur_node,
+					    &next_node);
+		if (QDF_IS_STATUS_ERROR(status))
+			break;
+		cur_node = next_node;
+		next_node = NULL;
+	}
+
+	return false;
+}
+
+static void scm_add_rnr_channel_db(struct wlan_objmgr_pdev *pdev,
 				   struct scan_cache_entry *entry)
 {
 	uint32_t chan_freq;
 	uint8_t is_6g_bss, i;
+	uint8_t *cc;
 	struct meta_rnr_channel *channel;
 	struct rnr_bss_info *rnr_bss;
 	struct scan_rnr_node *rnr_node;
+	struct wlan_country_ie *cc_ie;
+	struct wlan_objmgr_psoc *psoc;
+
+	psoc = wlan_pdev_get_psoc(pdev);
+	if (!psoc)
+		return;
 
 	chan_freq = entry->channel.chan_freq;
 	is_6g_bss = wlan_reg_is_6ghz_chan_freq(chan_freq);
@@ -126,14 +164,23 @@ static void scm_add_rnr_channel_db(struct wlan_objmgr_psoc *psoc,
 	if (!entry->ie_list.rnrie)
 		return;
 
+	cc_ie = util_scan_entry_country(entry);
+	if (cc_ie && cc_ie->len)
+		cc = cc_ie->cc;
+	else
+		cc = NULL;
+
 	for (i = 0; i < MAX_RNR_BSS; i++) {
 		rnr_bss = &entry->rnr.bss_info[i];
 		/* Skip if entry is not valid */
 		if (!rnr_bss->channel_number)
 			continue;
-		chan_freq = wlan_reg_chan_opclass_to_freq(rnr_bss->channel_number,
-							  rnr_bss->operating_class,
-							  true);
+
+		chan_freq =
+			wlan_reg_chan_opclass_to_freq_prefer_global(pdev, cc,
+								    rnr_bss->channel_number,
+								    rnr_bss->operating_class);
+
 		channel = scm_get_chan_meta(psoc, chan_freq);
 		if (!channel) {
 			scm_debug("Failed to get chan Meta freq %d", chan_freq);
@@ -145,7 +192,14 @@ static void scm_add_rnr_channel_db(struct wlan_objmgr_psoc *psoc,
 			scm_debug("List is full");
 			return;
 		}
-
+		if (scm_is_rnr_present(channel, &rnr_bss->bssid,
+				       rnr_bss->short_ssid)) {
+			scm_debug("skip dup freq %d: "QDF_MAC_ADDR_FMT" short ssid %x",
+				  chan_freq,
+				  QDF_MAC_ADDR_REF(rnr_bss->bssid.bytes),
+				  rnr_bss->short_ssid);
+			continue;
+		}
 		rnr_node = qdf_mem_malloc(sizeof(struct scan_rnr_node));
 		if (!rnr_node)
 			return;
@@ -1952,7 +2006,7 @@ void scm_update_rnr_from_scan_cache(struct wlan_objmgr_pdev *pdev)
 					     &scan_db->scan_hash_tbl[i], NULL);
 		while (cur_node) {
 			entry = cur_node->entry;
-			scm_add_rnr_channel_db(psoc, entry);
+			scm_add_rnr_channel_db(pdev, entry);
 			next_node =
 				scm_get_next_node(scan_db,
 						  &scan_db->scan_hash_tbl[i],
@@ -2079,6 +2133,55 @@ uint32_t scm_get_last_scan_time_per_channel(struct wlan_objmgr_vdev *vdev,
 	}
 
 	return 0;
+}
+
+struct scan_cache_entry *
+scm_scan_get_scan_entry_by_mac_freq(struct wlan_objmgr_pdev *pdev,
+				    struct qdf_mac_addr *bssid,
+				    uint16_t freq)
+{
+	struct scan_filter *scan_filter;
+	qdf_list_t *list = NULL;
+	struct scan_cache_node *first_node = NULL;
+	qdf_list_node_t *cur_node = NULL;
+	struct scan_cache_entry *scan_entry = NULL;
+
+	scan_filter = qdf_mem_malloc(sizeof(*scan_filter));
+	if (!scan_filter)
+		return NULL;
+	scan_filter->num_of_bssid = 1;
+	scan_filter->chan_freq_list[0] = freq;
+	scan_filter->num_of_channels = 1;
+	qdf_copy_macaddr(&scan_filter->bssid_list[0], bssid);
+
+	list = scm_get_scan_result(pdev, scan_filter);
+	qdf_mem_free(scan_filter);
+	if (!list || (list && !qdf_list_size(list))) {
+		scm_debug("Scan entry for bssid:"
+			  QDF_MAC_ADDR_FMT "and freq %d not found",
+			  QDF_MAC_ADDR_REF(bssid->bytes), freq);
+		goto done;
+	}
+	/*
+	 * There might be multiple scan results in the scan db with given mac
+	 * address(e.g. SSID/some capabilities of the AP have just changed and
+	 * old entry is not aged out yet). scm_get_scan_result() inserts the
+	 * latest scan result at the front of the given list. So, it's ok to
+	 * pick scan result from the front node alone.
+	 */
+	qdf_list_peek_front(list, &cur_node);
+	first_node = qdf_container_of(cur_node,
+				      struct scan_cache_node,
+				      node);
+
+	if (first_node && first_node->entry)
+		scan_entry = util_scan_copy_cache_entry(first_node->entry);
+
+done:
+	if (list)
+		scm_purge_scan_results(list);
+
+	return scan_entry;
 }
 
 QDF_STATUS

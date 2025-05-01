@@ -433,7 +433,7 @@ kgsl_sharedmem_create_bind_op(struct kgsl_process_private *private,
 			ret = -ENOENT;
 			goto err;
 		}
-		
+
 		/* Keep the child pinned in memory */
 		atomic_inc(&entry->vbo_count);
 

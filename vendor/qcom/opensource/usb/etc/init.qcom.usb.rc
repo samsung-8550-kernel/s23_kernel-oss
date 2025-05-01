@@ -273,6 +273,7 @@ on property:sys.usb.config=none && property:sys.usb.configfs=1
     write /config/usb_gadget/g1/UDC "none"
     stop adbd
     setprop sys.usb.ffs.ready 0
+    stop ss_conn_daemon2_service
     write /config/usb_gadget/g1/bDeviceClass 0
     write /config/usb_gadget/g1/bDeviceSubClass 0
     write /config/usb_gadget/g1/bDeviceProtocol 0
@@ -531,6 +532,7 @@ on property:sys.boot_completed=1 && property:sys.usb.ffs.ready=1 && property:sys
 
 on property:sys.boot_completed=1 && property:sys.usb.config=mtp,conn_gadget && property:sys.usb.configfs=1
     write /config/usb_gadget/g1/configs/b.1/strings/0x409/configuration "mtp_conn"
+    start ss_conn_daemon2_service
     rm /config/usb_gadget/g1/configs/b.1/f1
     rm /config/usb_gadget/g1/configs/b.1/f2
     rm /config/usb_gadget/g1/configs/b.1/f3
@@ -547,7 +549,7 @@ on property:sys.boot_completed=1 && property:sys.usb.config=mtp,conn_gadget && p
     symlink /config/usb_gadget/g1/functions/ss_acm.0 /config/usb_gadget/g1/configs/b.1/f2
     symlink /config/usb_gadget/g1/functions/conn_gadget.0 /config/usb_gadget/g1/configs/b.1/f3
     symlink /config/usb_gadget/g1/functions/ss_mon.mtp /config/usb_gadget/g1/configs/b.1/f4
-    write /sys/class/android_usb/f_conn_gadget/bInterfaceProtocol ${vendor.usb.conn_gadget_protocol}
+    write /sys/class/android_usb/f_conn_gadget/bInterfaceProtocol 3
     write /config/usb_gadget/g1/UDC ${sys.usb.controller}
     setprop sys.usb.state ${sys.usb.config}
 
@@ -556,6 +558,7 @@ on property:sys.boot_completed=1 && property:sys.usb.config=mtp,conn_gadget,adb 
 
 on property:sys.boot_completed=1 && property:sys.usb.ffs.ready=1 && property:sys.usb.config=mtp,conn_gadget,adb && property:sys.usb.configfs=1
     write /config/usb_gadget/g1/configs/b.1/strings/0x409/configuration "mtp_conn_adb"
+    start ss_conn_daemon2_service
     rm /config/usb_gadget/g1/configs/b.1/f1
     rm /config/usb_gadget/g1/configs/b.1/f2
     rm /config/usb_gadget/g1/configs/b.1/f3
@@ -573,7 +576,7 @@ on property:sys.boot_completed=1 && property:sys.usb.ffs.ready=1 && property:sys
     symlink /config/usb_gadget/g1/functions/conn_gadget.0 /config/usb_gadget/g1/configs/b.1/f3
     symlink /config/usb_gadget/g1/functions/ffs.adb /config/usb_gadget/g1/configs/b.1/f4
     symlink /config/usb_gadget/g1/functions/ss_mon.mtp /config/usb_gadget/g1/configs/b.1/f5
-    write /sys/class/android_usb/f_conn_gadget/bInterfaceProtocol ${vendor.usb.conn_gadget_protocol}
+    write /sys/class/android_usb/f_conn_gadget/bInterfaceProtocol 3
     write /config/usb_gadget/g1/UDC ${sys.usb.controller}
     setprop sys.usb.state ${sys.usb.config}
 
@@ -624,6 +627,7 @@ on property:sys.boot_completed=1 && property:sys.usb.ffs.ready=1 && property:sys
 
 on property:sys.boot_completed=1 && property:sys.usb.config=mtp,categories,conn_gadget && property:sys.usb.configfs=1
     write /config/usb_gadget/g1/configs/b.1/strings/0x409/configuration "mtp_cat_conn"
+    start ss_conn_daemon2_service
     rm /config/usb_gadget/g1/configs/b.1/f1
     rm /config/usb_gadget/g1/configs/b.1/f2
     rm /config/usb_gadget/g1/configs/b.1/f3
@@ -640,7 +644,7 @@ on property:sys.boot_completed=1 && property:sys.usb.config=mtp,categories,conn_
     symlink /config/usb_gadget/g1/functions/ss_acm.0 /config/usb_gadget/g1/configs/b.1/f2
     symlink /config/usb_gadget/g1/functions/conn_gadget.0 /config/usb_gadget/g1/configs/b.1/f3
     symlink /config/usb_gadget/g1/functions/ss_mon.mtp /config/usb_gadget/g1/configs/b.1/f4
-    write /sys/class/android_usb/f_conn_gadget/bInterfaceProtocol ${vendor.usb.conn_gadget_protocol}
+    write /sys/class/android_usb/f_conn_gadget/bInterfaceProtocol 3
     write /config/usb_gadget/g1/UDC ${sys.usb.controller}
     setprop sys.usb.state ${sys.usb.config}
 
@@ -649,6 +653,7 @@ on property:sys.boot_completed=1 && property:sys.usb.config=mtp,categories,conn_
 
 on property:sys.boot_completed=1 && property:sys.usb.ffs.ready=1 && property:sys.usb.config=mtp,categories,conn_gadget,adb && property:sys.usb.configfs=1
     write /config/usb_gadget/g1/configs/b.1/strings/0x409/configuration "mtp_cat_conn_adb"
+    start ss_conn_daemon2_service
     rm /config/usb_gadget/g1/configs/b.1/f1
     rm /config/usb_gadget/g1/configs/b.1/f2
     rm /config/usb_gadget/g1/configs/b.1/f3
@@ -666,7 +671,7 @@ on property:sys.boot_completed=1 && property:sys.usb.ffs.ready=1 && property:sys
     symlink /config/usb_gadget/g1/functions/conn_gadget.0 /config/usb_gadget/g1/configs/b.1/f3
     symlink /config/usb_gadget/g1/functions/ffs.adb /config/usb_gadget/g1/configs/b.1/f4
     symlink /config/usb_gadget/g1/functions/ss_mon.mtp /config/usb_gadget/g1/configs/b.1/f5
-    write /sys/class/android_usb/f_conn_gadget/bInterfaceProtocol ${vendor.usb.conn_gadget_protocol}
+    write /sys/class/android_usb/f_conn_gadget/bInterfaceProtocol 3
     write /config/usb_gadget/g1/UDC ${sys.usb.controller}
     setprop sys.usb.state ${sys.usb.config}
 #]

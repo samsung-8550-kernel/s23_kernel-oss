@@ -512,6 +512,7 @@ typedef struct sSirAssocRsp {
 #endif
 #ifdef WLAN_FEATURE_11BE_MLO
 	struct sir_multi_link_ie mlo_ie;
+	struct wlan_t2lm_context t2lm_ctx;
 #endif
 } tSirAssocRsp, *tpSirAssocRsp;
 
@@ -1436,6 +1437,16 @@ QDF_STATUS populate_dot11f_bcn_mlo_ie(struct mac_context *mac_ctx,
 				      struct pe_session *session);
 
 /**
+ * populate_dot11f_probe_req_mlo_ie() - populate mlo ie for probe req
+ * @mac_ctx: Global MAC context
+ * @session: PE session
+ *
+ * Return: QDF_STATUS_SUCCESS of no error
+ */
+QDF_STATUS populate_dot11f_probe_req_mlo_ie(struct mac_context *mac_ctx,
+					    struct pe_session *session);
+
+/**
  * populate_dot11f_mlo_rnr() - populate rnr for mlo
  * @mac_ctx: Global MAC context
  * @session: PE session
@@ -1538,6 +1549,7 @@ void lim_ieee80211_pack_ehtcap(uint8_t *ie, tDot11fIEeht_cap dot11f_eht_cap,
  * @dot11f_eht_cap: output pointer to dot11f EHT capabilities IE structure
  * @dot11f_he_cap: dot11f HE capabilities IE structure
  * @freq: frequency
+ * @is_eht_cap_from_sta: Is the IE received from non-AP STA device.
  *
  * This API is used to strip and decode EHT caps IE which is of variable in
  * length depending on the HE capabilities IE content.
@@ -1547,7 +1559,8 @@ void lim_ieee80211_pack_ehtcap(uint8_t *ie, tDot11fIEeht_cap dot11f_eht_cap,
 QDF_STATUS lim_strip_and_decode_eht_cap(uint8_t *ie, uint16_t ie_len,
 					tDot11fIEeht_cap *dot11f_eht_cap,
 					tDot11fIEhe_cap dot11f_he_cap,
-					uint16_t freq);
+					uint16_t freq,
+					bool is_eht_cap_from_sta);
 
 /**
  * lim_ieee80211_pack_ehtop() - Pack EHT Operations IE
@@ -1622,7 +1635,8 @@ static inline
 QDF_STATUS lim_strip_and_decode_eht_cap(uint8_t *ie, uint16_t ie_len,
 					tDot11fIEeht_cap *dot11f_eht_cap,
 					tDot11fIEhe_cap dot11f_he_cap,
-					uint16_t freq)
+					uint16_t freq,
+					bool is_eht_cap_from_sta)
 {
 	return QDF_STATUS_SUCCESS;
 }

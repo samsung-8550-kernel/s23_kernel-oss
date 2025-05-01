@@ -827,6 +827,14 @@ exit:
                           (volume->no_of_volpair), (volume->volume_pair->channel_mask),
                           (volume->volume_pair->vol));
     }
+
+#ifdef SEC_AUDIO_BLE_OFFLOAD
+    if (status != 0) {
+        PAL_DBG(LOG_TAG, "Setting volume failed status: %d, should be reture 0 always", status);
+        return 0;
+    }
+#endif
+
     return status;
 }
 
