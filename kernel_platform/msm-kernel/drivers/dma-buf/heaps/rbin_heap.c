@@ -605,7 +605,7 @@ int add_rbin_heap(struct platform_heap *heap_data)
 
 	exp_info.name = "qcom,camera-uncached";
 	exp_info.ops = &rbin_uncached_heap_ops;
-	exp_info.priv = NULL;
+	exp_info.priv = rbin_heap;
 
 	rbin_uncached_dma_heap = dma_heap_add(&exp_info);
 	if (IS_ERR(rbin_uncached_dma_heap)) {

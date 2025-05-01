@@ -1608,6 +1608,13 @@ int32_t npu_host_unload_network(struct npu_client *client,
 		return -EINVAL;
 	}
 
+	if (network->is_executing) {
+		pr_err("network is in execution\n");
+		network_put(network);
+		mutex_unlock(&host_ctx->lock);
+		return -EINVAL;
+	}
+
 	if (network->fw_error) {
 		pr_err("fw in error state, skip unload network in fw\n");
 		goto free_network;
@@ -1854,6 +1861,12 @@ int32_t npu_host_exec_network_v2(struct npu_client *client,
 		goto exec_v2_done;
 	}
 
+	if (network->is_executing) {
+		pr_err("network is already in execution\n");
+		ret = -EINVAL;
+		goto exec_v2_done;
+	}
+
 	if (network->fw_error) {
 		pr_err("fw is in error state\n");
 		ret = -EIO;
@@ -1871,6 +1884,7 @@ int32_t npu_host_exec_network_v2(struct npu_client *client,
 		goto exec_v2_done;
 	}
 
+	network->is_executing = true;
 	for (i = 0; i < num_patch_params; i++) {
 		exec_packet->patch_params[i].id = patch_buf_info[i].buf_id;
 		pr_debug("%d: patch_id: %x\n", i,
@@ -1952,6 +1966,7 @@ int32_t npu_host_exec_network_v2(struct npu_client *client,
 
 free_exec_packet:
 	kfree(exec_packet);
+	network->is_executing = false;
 exec_v2_done:
 	network_put(network);
 	mutex_unlock(&host_ctx->lock);

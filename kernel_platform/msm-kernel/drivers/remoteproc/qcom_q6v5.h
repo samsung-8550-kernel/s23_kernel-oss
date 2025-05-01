@@ -50,6 +50,8 @@ struct qcom_q6v5 {
 	atomic_t ssr_in_prog;
 	spinlock_t silent_ssr_lock;
 	void (*handover)(struct qcom_q6v5 *q6v5);
+	unsigned long long seq;
+	unsigned long long crash_seq;
 };
 
 int qcom_q6v5_init(struct qcom_q6v5 *q6v5, struct platform_device *pdev,
