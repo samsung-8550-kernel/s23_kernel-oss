@@ -13,7 +13,7 @@
 #include "ngksm_common.h"
 #include "ngk_hypervisor_detector.h"
 
-static int is_ngksm_initialized = false;
+static int is_ngksm_initialized;
 
 int ngksm_log_level = NGKSM_LOG_LEVEL;
 
@@ -30,14 +30,14 @@ void ngksm_printk(int level, const char *fmt, ...)
 	vaf.fmt = fmt;
 	vaf.va = &args;
 
-	printk(KERN_INFO "%s %pV", TAG, &vaf);
+	printk(KERN_INFO "[%s] %pV", TAG, &vaf);
 
 	va_end(args);
 }
 
 int ngksm_is_initialized(void)
 {
-	return is_ngksm_initialized;
+	return (is_ngksm_initialized == true) ? true : false;
 }
 
 static int __init ngksm_init(void)
@@ -49,8 +49,7 @@ static int __init ngksm_init(void)
 		NGKSM_LOG_ERROR("Reinitialization attempt ignored.");
 		goto exit_ret;
 	}
-	ngksm_rate_limit_init();
-	
+
 	ret = ngk_hyp_detector_init();
 	if (ret != NGKSM_SUCCESS)
 		NGKSM_LOG_ERROR("hypervisor_detector_init failed");
@@ -69,7 +68,7 @@ exit_ret:
 
 static void __exit ngksm_exit(void)
 {
-	if (is_ngksm_initialized) {
+	if (is_ngksm_initialized == true) {
 		is_ngksm_initialized = false;
 		ngksm_netlink_exit();
 		ngk_hyp_detector_exit();

@@ -25,7 +25,6 @@ static inline int ngk_hyp_detector_init(void)
 
 static inline void ngk_hyp_detector_exit(void)
 {
-	return;
 }
 #endif
 

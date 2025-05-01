@@ -9,7 +9,6 @@
 #ifndef _NGKSM_RATE_LIMIT_H
 #define _NGKSM_RATE_LIMIT_H
 
-extern int __init ngksm_rate_limit_init(void);
 extern int ngksm_check_message_rate_limit(void);
 
 #endif /* _NGKSM_RATE_LIMIT_H */

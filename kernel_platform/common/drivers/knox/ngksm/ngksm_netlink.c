@@ -33,9 +33,6 @@ static const struct genl_ops ngksm_kernel_ops[] = {
 	{
 		.cmd = NGKSM_MSG_CMD,
 		.doit = ngksm_daemon_callback,
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 2, 0)
-		.policy = ngksm_netlink_policy,
-#endif
 	},
 };
 
@@ -51,9 +48,7 @@ static struct genl_family ngksm_family = {
 	.maxattr = NGKSM_ATTR_MAX,
 	.module = THIS_MODULE,
 	.ops = ngksm_kernel_ops,
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 2, 0)
 	.policy = ngksm_netlink_policy,
-#endif
 	.mcgrps = ngksm_group,
 	.n_mcgrps = ARRAY_SIZE(ngksm_group),
 	.n_ops = ARRAY_SIZE(ngksm_kernel_ops),

@@ -64,28 +64,29 @@ struct hyp_detector_thread_t {
 
 static struct hyp_detector_thread_t hyp_detector_thread = {NULL, false};
 
-static void apply_execlude_policy(const u64 policy, const u64 mode) {
+static void apply_execlude_policy(const u64 policy, const u64 mode)
+{
 	u64 hyp_return = 0;
 	u64 subsystem = policy | mode;
 	u64 pad_bit = 0;
 	int ret = -1;
 
-	NGKSM_LOG_INFO("apply_execlude_policy");
+	NGKSM_LOG_INFO("%s", __func__);
 
 	uh_call(UH_APP_HDM, PAD_HYP_CMD, (u64)&hyp_return, (u64)subsystem, 0, 0);
 
-	if (hyp_return > MAX_PAD_RETURN ) {
+	if (hyp_return > MAX_PAD_RETURN) {
 		NGKSM_LOG_ERROR("Wrong return, It over the MAX_PAD_RETURN");
 		return;
 	}
 
 	pad_bit = hyp_return & PAD_BIT_MASK;
-	if (pad_bit > MAX_PAD_BIT ) {
+	if (pad_bit > MAX_PAD_BIT) {
 		NGKSM_LOG_ERROR("Wrong pad bit, It over the MAX_PAD_BIT");
 		return;
 	}
 
-	if(pad_bit != 0) {
+	if (pad_bit != 0) {
 		ret = ngksm_send_message("HYP_DET", "status change detected", (int64_t)pad_bit);
 		if (ret != NGKSM_SUCCESS)
 			NGKSM_LOG_ERROR("send message failed");
@@ -95,27 +96,28 @@ static void apply_execlude_policy(const u64 policy, const u64 mode) {
 }
 
 
-static void onetime_hyp_status_check(void) {
+static void onetime_hyp_status_check(void)
+{
 	u64 pad_bit = 0;
-	u64 status= 0;
+	u64 status = 0;
 	int ret = -1;
 
 	NGKSM_LOG_INFO("onetime_hyp_status_check");
 
 	status = 0;
 	uh_call(UH_APP_HDM, PAD_HYP_GET_STATUS, (u64)&status, 0, 0, 0);
-	if (status > MAX_PAD_RETURN ) {
+	if (status > MAX_PAD_RETURN) {
 		NGKSM_LOG_ERROR("Wrong return, It over the MAX_PAD_RETURN");
 		return;
 	}
 
 	pad_bit = status & PAD_BIT_MASK;
-	if (pad_bit > MAX_PAD_BIT ) {
+	if (pad_bit > MAX_PAD_BIT) {
 		NGKSM_LOG_ERROR("Wrong pad bit, It over the MAX_PAD_BIT");
 		return;
 	}
 
-	if(pad_bit != 0) {
+	if (pad_bit != 0) {
 		ret = ngksm_send_message("HYP_DET", "status change detected", (int64_t)pad_bit);
 		if (ret != NGKSM_SUCCESS)
 			NGKSM_LOG_ERROR("send message failed");
@@ -130,7 +132,6 @@ int cmd_hyp_detector(const long subsystem)
 	u64 pad_bit = 0;
 	u64 pad_support_bit = 0;
 
-	
 	if (!ngksm_daemon_ready()) {
 		NGKSM_LOG_ERROR("Native daemon is not ready\n");
 		return -1;
@@ -142,12 +143,12 @@ int cmd_hyp_detector(const long subsystem)
 	}
 
 
-	if (hyp_detector_thread.is_started && hyp_detector_thread.applied_subsystem == subsystem ) {
+	if (hyp_detector_thread.is_started && hyp_detector_thread.applied_subsystem == subsystem) {
 		NGKSM_LOG_INFO("Hyp detector already started as 0x%x\n", subsystem);
 		return 0;
 	}
 
-	if (!hyp_detector_thread.is_started && subsystem == 0 ) {
+	if (!hyp_detector_thread.is_started && subsystem == 0) {
 		NGKSM_LOG_INFO("Hyp detector already stopped\n");
 		return 0;
 	}
@@ -182,7 +183,7 @@ int cmd_hyp_detector(const long subsystem)
 			NGKSM_LOG_INFO("Hyp detector already stopped\n");
 			return 0;
 		}
-			
+
 		NGKSM_LOG_INFO("Hyp detector stop thread\n");
 		hyp_detector_thread.is_started = false;
 		hyp_detector_thread.applied_subsystem = 0;
@@ -212,9 +213,8 @@ static ssize_t store_pad_cmd(struct kobject *kobj, struct kobj_attribute *attr, 
 	}
 
 	for (i = 0; i < strlen(buf); i++) {
-		if (isalpha(buf[i]) || isdigit(buf[i]) || buf[i]== '|') {
+		if (isalpha(buf[i]) || isdigit(buf[i]) || buf[i] == '|')
 			real_len++;
-		}
 	}
 
 	memcpy(temp_buf, buf, real_len);
@@ -223,43 +223,39 @@ static ssize_t store_pad_cmd(struct kobject *kobj, struct kobj_attribute *attr, 
 	if (!strncmp(buf, PAD_CMD, strlen(PAD_CMD))) {
 		if (!kstrtol(&temp_buf[strlen(PAD_CMD)], 10, &num)) {
 			NGKSM_LOG_DEBUG("pad_cmd policy = %d", num);
-			if ( num >= 0 ) {
+			if (num >= 0)
 				cmd_hyp_detector(num);
-			} else {
+			else
 				NGKSM_LOG_DEBUG("pad_cmd policy = %d, wrong policy", num);
-			}	
-		} else {
+		} else
 			NGKSM_LOG_INFO("pad_cmd policy validation error %s", &temp_buf[strlen(PAD_CMD)]);
-		}
 	} else if (!strncmp(buf, PAD_EXECLUDE_CMD, strlen(PAD_EXECLUDE_CMD))) {
 		if (!kstrtol(&temp_buf[strlen(PAD_EXECLUDE_CMD)], 10, &num)) {
 			NGKSM_LOG_DEBUG("pad_cmd execlude policy = %d", num);
-			if ( num > 0 ) {
+			if (num > 0)
 				apply_execlude_policy((u64)num, PAD_EXECLUDE);
-			} else {
+			else
 				NGKSM_LOG_DEBUG("pad_cmd execlude policy = %d, wrong policy", num);
-			}	
-		} else {
-			NGKSM_LOG_INFO("pad_cmd execlude policy validation error %s", &temp_buf[strlen(PAD_EXECLUDE_CMD)]);
-		}
+		} else
+			NGKSM_LOG_INFO("pad_cmd execlude policy validation error %s",
+				&temp_buf[strlen(PAD_EXECLUDE_CMD)]);
 	} else if (!strncmp(buf, PAD_RELEASE_EXECLUDE_CMD, strlen(PAD_RELEASE_EXECLUDE_CMD))) {
 		if (!kstrtol(&temp_buf[strlen(PAD_RELEASE_EXECLUDE_CMD)], 10, &num)) {
 			NGKSM_LOG_DEBUG("pad_cmd release execlude policy = %d", num);
-			if ( num > 0 ) {
+			if (num > 0)
 				apply_execlude_policy((u64)num, PAD_RELEASE_EXECLUDE);
-			} else {
+			else
 				NGKSM_LOG_DEBUG("pad_cmd release execlude policy = %d, wrong policy", num);
-			}	
 		} else {
-			NGKSM_LOG_INFO("pad_cmd release execlude policy validation error %s", &temp_buf[strlen(PAD_EXECLUDE_CMD)]);
+			NGKSM_LOG_INFO("pad_cmd release execlude policy validation error %s",
+				&temp_buf[strlen(PAD_EXECLUDE_CMD)]);
 		}
-	} else {
+	} else
 		NGKSM_LOG_INFO("CMD not matched");
-	}
 
-	NGKSM_LOG_DEBUG("pad_cmd buf = %s", buf);
-	NGKSM_LOG_DEBUG("pad_cmd len = %zd", len);
-	NGKSM_LOG_DEBUG("pad_cmd real_len = %d", real_len);
+	NGKSM_LOG_DEBUG("%s, buf = %s", __func__, buf);
+	NGKSM_LOG_DEBUG("%s, len = %zd", __func__, len);
+	NGKSM_LOG_DEBUG("%s, real_len = %d", __func__, real_len);
 
 
 	return len;
@@ -267,11 +263,10 @@ static ssize_t store_pad_cmd(struct kobject *kobj, struct kobj_attribute *attr, 
 
 static ssize_t show_state(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
 {
-	if ( hyp_detector_thread.is_started == true ) {
+	if (hyp_detector_thread.is_started == true)
 		return sprintf(buf, "Running, Subsystem = 0x%llx\n", hyp_detector_thread.applied_subsystem);
-	} else {
+	else
 		return sprintf(buf, "Stopped\n");
-	}
 }
 
 
@@ -297,27 +292,27 @@ static struct attribute_group attr_group = {
 static int hyp_detector(void *data)
 {
 	u64 pad_bit = 0;
-	u64 status= 0;
+	u64 status = 0;
 	int ret = -1;
 
-	NGKSM_LOG_INFO("hyp_detector start");
-	
+	NGKSM_LOG_INFO("%s", __func__);
+
 	while (!kthread_should_stop()) {
 		NGKSM_LOG_DEBUG("loop start");
 		status = 0;
 		uh_call(UH_APP_HDM, PAD_HYP_GET_STATUS, (u64)&status, 0, 0, 0);
-		if (status > MAX_PAD_RETURN ) {
+		if (status > MAX_PAD_RETURN) {
 			NGKSM_LOG_ERROR("Wrong return, It over the MAX_PAD_RETURN");
 			break;
 		}
 
 		pad_bit = status & PAD_BIT_MASK;
-		if (pad_bit > MAX_PAD_BIT ) {
+		if (pad_bit > MAX_PAD_BIT) {
 			NGKSM_LOG_ERROR("Wrong pad bit, It over the MAX_PAD_BIT");
 			break;
 		}
-		
-		if(pad_bit != 0) {
+
+		if (pad_bit != 0) {
 			ret = ngksm_send_message("HYP_DET", "status change detected", (int64_t)pad_bit);
 			if (ret != NGKSM_SUCCESS)
 				NGKSM_LOG_ERROR("Send message failed");
@@ -327,7 +322,7 @@ static int hyp_detector(void *data)
 		schedule_timeout(msecs_to_jiffies(60000));
 	}
 	set_current_state(TASK_RUNNING);
-	NGKSM_LOG_DEBUG("hyp_detector stop");
+	NGKSM_LOG_DEBUG("%s, Stop loop", __func__);
 	return NGKSM_SUCCESS;
 }
 
@@ -335,10 +330,10 @@ int __init ngk_hyp_detector_init(void)
 {
 	int result;
 
-	NGKSM_LOG_INFO("ngk hyp detector Init");
+	NGKSM_LOG_INFO("%s", __func__);
 
 	pad_kobj = kobject_create_and_add(PAD_NODE_DIR, kernel_kobj);
-	
+
 	if (!pad_kobj) {
 		NGKSM_LOG_ERROR("Failed to create sysfs directory\n");
 		return -ENOMEM;
@@ -359,7 +354,7 @@ void __exit ngk_hyp_detector_exit(void)
 {
 	u64 result;
 
-	NGKSM_LOG_INFO("ngk hyp detector exit.");
+	NGKSM_LOG_INFO("%s", __func__);
 
 	kobject_put(pad_kobj);
 

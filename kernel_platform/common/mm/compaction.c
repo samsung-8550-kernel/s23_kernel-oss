@@ -1312,6 +1312,8 @@ static bool suitable_migration_target(struct compact_control_ext *cc_ext,
 							struct page *page)
 {
 	struct compact_control *cc = cc_ext->cc;
+	int mt;
+
 	/* If the page is a large free page, then disallow migration */
 	if (PageBuddy(page)) {
 		/*
@@ -1322,6 +1324,10 @@ static bool suitable_migration_target(struct compact_control_ext *cc_ext,
 		if (buddy_order_unsafe(page) >= pageblock_order)
 			return false;
 	}
+
+	mt = get_pageblock_migratetype(page);
+	if (is_migrate_cma(mt) || is_migrate_isolate(mt))
+		return false;
 
 	if (cc->ignore_block_suitable)
 		return true;
@@ -1394,6 +1400,7 @@ fast_isolate_around(struct compact_control *cc, unsigned long pfn)
 {
 	unsigned long start_pfn, end_pfn;
 	struct page *page;
+	int mt;
 
 	/* Do not search around if there are enough pages already */
 	if (cc->nr_freepages >= cc->nr_migratepages)
@@ -1409,6 +1416,10 @@ fast_isolate_around(struct compact_control *cc, unsigned long pfn)
 
 	page = pageblock_pfn_to_page(start_pfn, end_pfn, cc->zone);
 	if (!page)
+		return;
+
+	mt = get_pageblock_migratetype(page);
+	if (is_migrate_cma(mt) || is_migrate_isolate(mt))
 		return;
 
 	isolate_freepages_block(cc, &start_pfn, end_pfn, &cc->freepages, 1, false);

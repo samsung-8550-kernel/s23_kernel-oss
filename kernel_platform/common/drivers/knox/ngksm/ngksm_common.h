@@ -13,7 +13,7 @@
 #include <linux/printk.h>
 
 
-#define TAG				"[ngksm]"
+#define TAG				"ngksm"
 
 void ngksm_printk(int level, const char *fmt, ...);
 

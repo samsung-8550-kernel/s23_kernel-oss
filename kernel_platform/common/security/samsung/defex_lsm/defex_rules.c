@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright (c) 2018 Samsung Electronics Co., Ltd. All Rights Reserved
  *
@@ -6,7 +7,7 @@
  * as published by the Free Software Foundation.
  */
 
-#if 0
+#ifdef __NEVER_DEFINED__
 	/* Rules start after this line */
 
 	{feature_ped_exception,"/system/bin/run-as"},	/* DEFAULT */
@@ -278,4 +279,4 @@
 	{feature_integrity_check,"/vendor/bin/hw/vendor.samsung.hardware.tlc.kg@1.1-service"},
 	/* Rules will be added here */
 	/* Never modify the above line. Rules will be added for buildtime */
-#endif /* if 0 */
+#endif /* __NEVER_DEFINED__ */

@@ -52,9 +52,10 @@ noinline int ngksm_send_message(const char *feature_code,
 		goto exit_send;
 
 	ret = ngksm_send_netlink_message(feature_code, detail, value);
-	if (ret == NGKSM_SUCCESS)
+	if (ret == NGKSM_SUCCESS) {
 			NGKSM_LOG_DEBUG("send netlink message success - {'%s', '%s' (%zu bytes), %lld}",
 				feature_code, detail, len, value);
+	}
 
 exit_send:
 	return ret;
