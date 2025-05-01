@@ -1625,7 +1625,6 @@ static void __dsp_cvp_power_req(struct cvp_dsp_cmd_msg *cmd)
 
 	if (!inst || !is_cvp_inst_valid(inst)) {
 		dprintk(CVP_ERR, "%s incorrect session ID %llx\n", __func__, inst);
-		cmd->ret = -1;
 		goto dsp_fail_power_req;
 	}
 

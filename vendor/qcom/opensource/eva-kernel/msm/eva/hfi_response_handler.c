@@ -464,7 +464,6 @@ static int hfi_process_session_dump_notify(u32 device_id,
 	info->response_type = HAL_SESSION_DUMP_NOTIFY;
 	info->response.cmd = cmd_done;
     
-	
 	cvp_put_inst(inst);
 	return 0;
 }
