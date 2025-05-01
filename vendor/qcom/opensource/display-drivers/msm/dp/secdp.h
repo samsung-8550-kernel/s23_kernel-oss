@@ -399,6 +399,7 @@ struct secdp_hmd {
 struct secdp_hdcp {
 	struct delayed_work start_work;
 	int retry;	/* count if dp link is unstable during hdcp */
+	u32 fail_cnt;
 };
 
 struct secdp_hpd {

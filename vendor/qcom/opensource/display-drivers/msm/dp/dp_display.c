@@ -1009,6 +1009,48 @@ static bool secdp_mode_count_check(struct dp_display_private *dp)
 
 	return sec->mode_cnt ? true : false;
 }
+
+#define STEP0	1
+#define STEP1	10
+#define STEP2	100
+#define STEP3	1000
+
+static void secdp_print_auth_state(struct dp_display_private *dp,
+		struct dp_link_hdcp_status *status)
+{
+	struct secdp_misc *sec = &dp->sec;
+	u32 fail_cnt = sec->hdcp.fail_cnt;
+
+	if (status->hdcp_state == HDCP_STATE_AUTH_FAIL) {
+		u32 num_skip = STEP3;
+
+		if (0 <= fail_cnt && fail_cnt < STEP1)
+			num_skip = STEP0;
+		else if (STEP1 <= fail_cnt && fail_cnt < STEP2)
+			num_skip = STEP1;
+		else if (STEP2 <= fail_cnt && fail_cnt < STEP3)
+			num_skip = STEP2;
+		else
+			num_skip = STEP3;
+
+		if (fail_cnt % num_skip == 0) {
+			DP_INFO("%s: %s %u\n", sde_hdcp_version(status->hdcp_version),
+				sde_hdcp_state_name(status->hdcp_state), fail_cnt);
+		}
+		sec->hdcp.fail_cnt++;
+		return;
+	}
+
+	if (status->hdcp_state == HDCP_STATE_AUTHENTICATED) {
+		if (fail_cnt > 0) {
+			DP_INFO("RESET fail_cnt %u\n", fail_cnt);
+			sec->hdcp.fail_cnt = 0;
+		}
+	}
+
+	DP_INFO("%s: %s\n", sde_hdcp_version(status->hdcp_version),
+		sde_hdcp_state_name(status->hdcp_state));
+}
 #endif
 
 #if defined(CONFIG_SECDP_DBG)
@@ -1517,8 +1559,12 @@ static void dp_display_hdcp_cb_work(struct work_struct *work)
 	dp_display_hdcp_print_auth_state(dp);
 
 	status = &dp->link->hdcp_status;
+#if !defined(CONFIG_SECDP)
 	DP_INFO("%s: %s\n", sde_hdcp_version(status->hdcp_version),
 		sde_hdcp_state_name(status->hdcp_state));
+#else
+	secdp_print_auth_state(dp, status);
+#endif
 
 	dp_display_update_hdcp_status(dp, false);
 
@@ -2408,6 +2454,10 @@ static int dp_display_process_hpd_low(struct dp_display_private *dp, bool skip_w
 
 #if defined(CONFIG_SECDP)
 	cancel_delayed_work(&dp->sec.hpd.noti_work);
+	if (dp->sec.hdcp.fail_cnt > 0) {
+		DP_INFO("auth fail_cnt %u, reset\n", dp->sec.hdcp.fail_cnt);
+		dp->sec.hdcp.fail_cnt = 0;
+	}
 	cancel_delayed_work_sync(&dp->sec.hdcp.start_work);
 	cancel_delayed_work(&dp->sec.link_status_work);
 	cancel_delayed_work(&dp->sec.poor_discon_work);
