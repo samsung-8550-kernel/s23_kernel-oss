@@ -2478,6 +2478,7 @@ int StreamOutPrimary::Standby() {
 #endif
 #ifdef SEC_AUDIO_CALL_TRANSLATION
         if (adevice->voice_ && adevice->voice_->sec_voice_->call_translation &&
+            !adevice->voice_->IsAnyCallActive() &&
             usecase_ == USECASE_AUDIO_PLAYBACK_VOIP) {
             adevice->voice_->sec_voice_->SetVoiceRxEffectForTranslation(false);
         }

@@ -1194,8 +1194,10 @@ int AudioVoice::VoiceStart(voice_session_t *session) {
     if (sec_voice_->voice_rx_control == TRANSLATION_MUTE)
         session->device_mute.mute = true;
 
-    if (sec_voice_->call_translation)
+    if (sec_voice_->call_translation) {
         sec_voice_->ControlTxVolumeDown();
+        sec_voice_->SetVoiceRxEffectForTranslation(true);
+    }
 #endif
 
     /*Apply device mute if needed*/
