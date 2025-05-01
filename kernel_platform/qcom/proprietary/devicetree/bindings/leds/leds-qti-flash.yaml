@@ -22,6 +22,7 @@ properties:
   compatible:
     items:
       - const: qcom,pm8350c-flash-led
+      - const: qcom,pm2250-flash-led
 
   reg:
     description: Base address of flash LED module.

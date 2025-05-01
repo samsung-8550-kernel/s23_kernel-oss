@@ -165,6 +165,12 @@ The following properties are only required when LRA actuator is used:
 		when detecting LRA impedance. This is only applicable for
 		HAP525_HV haptics module.
 
+- qcom,sw-cmd-freq-detect:
+  Usage:	optional
+  Value type:	<bool>
+  Definition:	Specifies if software command based frequency detection
+		method is used for LRA resonant frequency detection.
+
 A child node named "qcom,hap-swr-slave-reg" can be defined to export a regulator
 device which is used for swr-haptics module to control the online status of SWR
 slave. The child node should have following property for this regulator device:

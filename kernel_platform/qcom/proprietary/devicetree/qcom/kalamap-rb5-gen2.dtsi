@@ -138,8 +138,6 @@
 	pcie_upd_1p05_vreg: pcie_upd_1p05_vreg {
 		compatible = "regulator-fixed";
 		regulator-name = "pcie_upd_1p05_vreg";
-		pinctrl-names = "default";
-		pinctrl-0 = <&pice0_usb_power_1p05_default>;
 		gpio = <&tlmm 179 GPIO_ACTIVE_HIGH>;
 		vin-supply = <&qps615_resx0_0p9_vreg>;
 		regulator-min-microvolt = <1000000>;
@@ -152,8 +150,6 @@
 	pcie_upd_3p3_vreg: pcie_upd_3p3_vreg {
 		compatible = "regulator-fixed";
 		regulator-name = "pcie_upd_3p3_vreg";
-		pinctrl-names = "default";
-		pinctrl-0 = <&pice0_usb_power_3p3_default>;
 		gpio = <&tlmm 13 GPIO_ACTIVE_HIGH>;
 		vin-supply = <&pcie_upd_1p05_vreg>;
 		regulator-min-microvolt = <3300000>;
@@ -166,8 +162,6 @@
 	upd_rest_vreg: upd_rest_vreg {
 		compatible = "regulator-fixed";
 		regulator-name = "upd_rest_vreg";
-		pinctrl-names = "default";
-		pinctrl-0 = <&pice0_usb_ponrst_default>;
 		gpio = <&tlmm 182 GPIO_ACTIVE_HIGH>;
 		vin-supply = <&pcie_upd_3p3_vreg>;
 		regulator-min-microvolt = <3300000>;
@@ -180,10 +174,13 @@
 	usbhub_rest_vreg: usbhub_rest_vreg {
 		compatible = "regulator-fixed";
 		regulator-name = "usbhub_rest_vreg";
-		pinctrl-names = "default";
-		pinctrl-0 = <&pcie0_usbhub_reset_default>;
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
 		gpio = <&tlmm 41 GPIO_ACTIVE_LOW>;
-		enable-active-high;
+		regulator-boot-on;
+		regulator-always-on;
+		startup-delay-us = <1500>;
+		off-on-delay-us = <1500>;
 	};
 
 	gpio_key {

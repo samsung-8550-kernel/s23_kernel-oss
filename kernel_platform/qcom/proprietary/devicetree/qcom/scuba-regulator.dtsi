@@ -157,6 +157,7 @@
 		qcom,resource-name = "rwlm";
 		qcom,resource-id = <0>;
 
+		L9A:
 		VDD_LPI_MX_LEVEL:
 		L9A_LEVEL: pm2250_l9_level: regulator-l9-level {
 			compatible = "qcom,rpm-smd-regulator";
@@ -358,6 +359,16 @@
 			regulator-min-microvolt = <2850000>;
 			regulator-max-microvolt = <3400000>;
 			qcom,init-voltage = <2850000>;
+			status = "okay";
+		};
+	};
+
+	rpm-regulator-ldoa23 {
+		status = "okay";
+		L23A: pm2250_l23: regulator-l23 {
+			regulator-min-microvolt = <3200000>;
+			regulator-max-microvolt = <3400000>;
+			qcom,init-voltage = <3200000>;
 			status = "okay";
 		};
 	};

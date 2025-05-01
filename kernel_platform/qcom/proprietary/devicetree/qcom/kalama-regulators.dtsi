@@ -1435,7 +1435,7 @@
 			regulator-name = "pm8010n_l7";
 			qcom,set = <RPMH_REGULATOR_SET_ALL>;
 			regulator-min-microvolt = <2960000>;
-			regulator-max-microvolt = <2960000>;
+			regulator-max-microvolt = <3300000>;
 			qcom,init-voltage = <2960000>;
 		};
 	};

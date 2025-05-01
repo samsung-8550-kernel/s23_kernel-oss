@@ -63,3 +63,17 @@ besbev_codec: besbev-codec {
 
 	qcom,cdc-static-supplies = "cdc-mic-bias";
 };
+
+PM2250 SPMI node
+
+pm2250_spmi: Child node of SPMI bus required for rouleur codec
+             in order to access SPMI register to reset the peripheral.
+
+Required properties:
+ -compatible: "qcom,pm2250-spmi";
+
+&spmi_bus {
+                pm2250_cdc: qcom,pm2250-cdc {
+                        compatible = "qcom,pm2250-spmi";
+                };
+};

@@ -302,8 +302,8 @@
 				<&qupv3_se9_default_tx>;
 			pinctrl-1 = <&qupv3_se9_cts>, <&qupv3_se9_rx>, <&qupv3_se9_rts>,
 				<&qupv3_se9_tx>;
-			pinctrl-2 = <&qupv3_se9_cts>, <&qupv3_se9_default_rx>, <&qupv3_se9_rts>,
-				<&qupv3_se9_tx>;
+			pinctrl-2 = <&qupv3_se9_default_cts>, <&qupv3_se9_default_rx>, <&qupv3_se9_default_rts>,
+				<&qupv3_se9_default_tx>;
 			pinctrl-3 = <&qupv3_se9_default_cts>, <&qupv3_se9_default_rx>, <&qupv3_se9_default_rts>,
 				<&qupv3_se9_default_tx>;
 			interrupts-extended = <&intc GIC_SPI 312 IRQ_TYPE_LEVEL_HIGH>,

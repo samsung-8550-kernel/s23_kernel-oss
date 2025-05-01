@@ -6,6 +6,9 @@
 #include "kalama-pmic-overlay.dtsi"
 #include "kalama-thermal-overlay.dtsi"
 
+#include <dt-bindings/interconnect/qcom,kalama.h>
+#include "kalama-mhi.dtsi"
+
 &sdhc_2 {
 	status = "ok";
 	vdd-supply = <&pm_humu_l9>;

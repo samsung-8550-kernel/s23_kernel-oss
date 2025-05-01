@@ -54,6 +54,12 @@ Please refer to slimbus/bus.txt for details of the common SLIMBus bindings.
 		for the ADSP to be up. This flag is only needed if we want
 		to wait for ADSP to be up.
 
+Optional properties:
+- qcom,enable-fatal:
+	Usage: optional
+	Value type: <bool>
+	Definition: Spcify 1 to enable fatal qmi request to trigger ADSP fatal from slimbus master.
+
 = NGD Devices
 Each subnode represents an instance of NGD, must contain the following
 properties:
@@ -78,6 +84,7 @@ slim@91c0000 {
 	reg = <0x91c0000 0x2c000>;
 	interrupts = <0 163 0>;
 	dmas =	<&slimbam 3>, <&slimbam 4>;
+	qcom,enable-fatal;
 	dma-names = "rx", "tx";
 	#address-cells = <1>;
 	#size-cells = <0>;

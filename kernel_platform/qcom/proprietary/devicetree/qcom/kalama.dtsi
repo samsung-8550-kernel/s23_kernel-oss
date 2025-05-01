@@ -771,6 +771,7 @@
 		qcom,ea-pc = <0x430>;
 		dmas = <&slimbam 3>, <&slimbam 4>;
 		dma-names = "rx", "tx";
+		qcom,enable-fatal;
 		#address-cells = <1>;
 		#size-cells = <0>;
 		status = "disabled";

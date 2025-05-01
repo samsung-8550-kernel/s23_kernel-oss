@@ -38,6 +38,12 @@ The sail mailbox is used for communication between APSS and SAIL.
 	Definition: A list of tuples with a phandle to the sail-mailbox
 		    and sail-mailbox-ota memory regions.
 
+- sail-handshake-delay:
+	Usage: optional
+	Value type: <u32>
+	Definition: An optional parameter to set a delay between sail-mailbox
+		    handshake signals.
+
 = EXAMPLE
 The following example represents the SAIL mailbox node, as found in SA8775P.
 
@@ -59,4 +65,5 @@ The following example represents the SAIL mailbox node, as found in SA8775P.
 			     <IPCC_CLIENT_SAIL0 0x5 IRQ_TYPE_EDGE_RISING>,
 			     <IPCC_CLIENT_SAIL0 0x6 IRQ_TYPE_EDGE_RISING>,
 			     <IPCC_CLIENT_SAIL0 0X7 IRQ_TYPE_EDGE_RISING>;
+		delay = <10000>;
 	};

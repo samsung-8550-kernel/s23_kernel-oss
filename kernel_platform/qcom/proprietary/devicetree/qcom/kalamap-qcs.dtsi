@@ -37,6 +37,10 @@
 	};
 };
 
+&pcie1_rp {
+	/delete-node/ qcom,mhi@0;
+};
+
 &mem_client_3 {
 	qcom,peripheral-size = <0x0>;
 };

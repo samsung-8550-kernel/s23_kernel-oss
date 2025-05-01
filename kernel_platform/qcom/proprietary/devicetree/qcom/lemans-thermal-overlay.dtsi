@@ -5,17 +5,17 @@
 		cooling-maps {
 			pm8775_1_mbg_cpu0 {
 				trip = <&pm8775_sail_1_trip0>;
-				cooling-device = <&CPU0 13 THERMAL_NO_LIMIT>;
+				cooling-device = <&CPU0 7 THERMAL_NO_LIMIT>;
 			};
 
 			pm8775_1_mbg_cpu4 {
 				trip = <&pm8775_sail_1_trip0>;
-				cooling-device = <&CPU4 13 THERMAL_NO_LIMIT>;
+				cooling-device = <&CPU4 7 THERMAL_NO_LIMIT>;
 			};
 
 			pm8775_1_mbg_gpu {
 				trip = <&pm8775_sail_1_trip0>;
-				cooling-device = <&msm_gpu 3 THERMAL_NO_LIMIT>;
+				cooling-device = <&msm_gpu 1 THERMAL_NO_LIMIT>;
 			};
 		};
 	};
@@ -29,12 +29,12 @@
 
 			pm8775_2_mbg_cpu0 {
 				trip = <&pm8775_sail_2_trip0>;
-				cooling-device = <&CPU0 13 THERMAL_NO_LIMIT>;
+				cooling-device = <&CPU0 7 THERMAL_NO_LIMIT>;
 			};
 
 			pm8775_2_mbg_cpu4 {
 				trip = <&pm8775_sail_2_trip0>;
-				cooling-device = <&CPU4 13 THERMAL_NO_LIMIT>;
+				cooling-device = <&CPU4 7 THERMAL_NO_LIMIT>;
 			};
 		};
 	};
@@ -43,7 +43,7 @@
 		cooling-maps {
 			pm8775_3_mbg_cpu0 {
 				trip = <&pm8775_sail_3_trip0>;
-				cooling-device = <&CPU0 13 THERMAL_NO_LIMIT>;
+				cooling-device = <&CPU0 7 THERMAL_NO_LIMIT>;
 			};
 
 			pm8775_3_mbg_cpu1 {
@@ -72,7 +72,7 @@
 
 			pm8775_4_mbg_cpu0 {
 				trip = <&pm8775_sail_4_trip0>;
-				cooling-device = <&CPU0 13 THERMAL_NO_LIMIT>;
+				cooling-device = <&CPU0 7 THERMAL_NO_LIMIT>;
 			};
 
 			pm8775_4_mbg_cpu4 {

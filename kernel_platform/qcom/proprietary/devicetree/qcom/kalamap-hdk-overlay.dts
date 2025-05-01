@@ -3,6 +3,7 @@
 
 #include <dt-bindings/interconnect/qcom,kalama.h>
 #include "kalamap-hdk.dtsi"
+#include <dt-bindings/regulator/qcom,rpmh-regulator-levels.h>
 
 / {
 	model = "Qualcomm Technologies, Inc. KalamaP HDK";
@@ -14,9 +15,11 @@
 &pcie0 {
 	qcom,config-recovery;
 	qcom,drv-name = "lpass";
-	msi-map = <0x0 &gic_its 0x1400 0x1>,
-		  <0x100 &gic_its 0x1401 0x1>; /* 32 event IDs */
+	msi-parent = <&pcie0_msi>;
+};
 
+&pcie0_msi {
+	status = "ok";
 };
 
 &pcie1 {
@@ -67,3 +70,19 @@
 		};
 	};
 };
+
+&apps_rsc_drv2 {
+	rpmh-regulator-ldon7 {
+		compatible = "qcom,rpmh-vrm-regulator";
+		qcom,resource-name = "ldon7";
+
+		L7N: pm8010n_l7: regulator-pm8010n-l7 {
+			regulator-name = "pm8010n_l7";
+			qcom,set = <RPMH_REGULATOR_SET_ALL>;
+			regulator-min-microvolt = <2960000>;
+			regulator-max-microvolt = <3300000>;
+			qcom,init-voltage = <2960000>;
+		};
+	};
+};
+

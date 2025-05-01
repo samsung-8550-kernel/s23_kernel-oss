@@ -45,7 +45,7 @@ dtb-y += $(waipio-dtb-y)
 
 
 KALAMA_BASE_DTB += kalama.dtb kalama-v2.dtb kalama-sg.dtb kalama-qcm.dtb
-KALAMA_APQ_BASE_DTB += kalamap.dtb kalamap-v2.dtb kalamap-sg.dtb kalamap-qcs.dtb
+KALAMA_APQ_BASE_DTB += kalamap.dtb kalamap-v2.dtb kalamap-np-qcs.dtb kalamap-sg.dtb kalamap-qcs.dtb
 
 KALAMA_BOARDS += \
 		 kalama-mtp-overlay.dtbo \
@@ -67,7 +67,8 @@ KALAMA_BOARDS += \
 		 kalamap-aim300-rdk-overlay.dtbo \
 		 kalamap-hdk-rb5-gen2-single-wingmate-overlay.dtbo \
 		 kalamap-hdk-rb5-gen2-dual-wingmate-overlay.dtbo \
-		 kalamap-hdk-rb5-gen2-vc-overlay.dtbo
+		 kalamap-hdk-rb5-gen2-vc-overlay.dtbo \
+		 kalamap-iot-vc-overlay.dtbo
 
 NOAPQ_KALAMA_BOARDS += \
 		 kalama-rumi-overlay.dtbo \
@@ -85,6 +86,7 @@ kalama_lu-overlays-dtb-$(CONFIG_ARCH_KALAMA) += $(KALAMA_BOARDS) $(NOAPQ_KALAMA_
 dtb-y += $(kalama-dtb-y)
 
 CROW_BASE_DTB += crow.dtb
+CROW_APQ_BASE_DTB += crowp.dtb
 
 CROW_BOARDS += \
 		crow-rumi-overlay.dtbo \
@@ -96,9 +98,20 @@ CROW_BOARDS += \
 		crow-idp-rcm-overlay.dtbo \
 		crow-qrd-overlay.dtbo
 
+CROW_APQ_BOARDS += \
+		crowp-rumi-overlay.dtbo \
+		crowp-atp-overlay.dtbo \
+		crowp-idp-overlay.dtbo \
+		crowp-idp-wcd9395-wcd-dmic-overlay.dtbo \
+		crowp-idp-wcd9395-dmic-overlay.dtbo \
+		crowp-idp-wcd9395-aatc-overlay.dtbo \
+		crowp-idp-rcm-overlay.dtbo \
+		crowp-qrd-overlay.dtbo
+
 kalama-dtb-$(CONFIG_ARCH_CROW) += \
-	$(call add-overlays, $(CROW_BOARDS) ,$(CROW_BASE_DTB))
-kalama-overlays-dtb-$(CONFIG_ARCH_CROW) += $(CROW_BOARDS) $(CROW_BASE_DTB)
+	$(call add-overlays, $(CROW_BOARDS) ,$(CROW_BASE_DTB))\
+	$(call add-overlays, $(CROW_APQ_BOARDS) ,$(CROW_APQ_BASE_DTB))
+kalama-overlays-dtb-$(CONFIG_ARCH_CROW) += $(CROW_BOARDS) $(CROW_APQ_BOARDS) $(CROW_BASE_DTB) $(CROW_APQ_BASE_DTB)
 dtb-y += $(kalama-dtb-y)
 
 KHAJE_BASE_DTB += khaje.dtb khajep.dtb khajeq.dtb khajeg.dtb khaje-3gb.dtb
@@ -151,6 +164,7 @@ bengal-overlays-dtb-$(CONFIG_ARCH_KHAJE) += $(KHAJE_BOARDS) $(KHAJE_BASE_DTB)
 dtb-y += $(bengal-dtb-y)
 
 BENGAL_BASE_DTB += bengal.dtb bengalp.dtb bengal-1gb.dtb bengal-2gb.dtb
+BENGAL_IOT_BASE_DTB += bengal-iot.dtb bengalp-iot.dtb bengal-iot-2gb.dtb bengalp-iot-2gb.dtb
 
 BENGAL_BOARDS += \
 		bengal-rumi-overlay.dtbo \
@@ -164,10 +178,21 @@ BENGAL_BOARDS += \
 	        bengal-idp-usbc-1gb-overlay.dtbo \
 	        bengal-idp-usbc-2gb-overlay.dtbo
 
-bengal-dtb-$(CONFIG_ARCH_BENGAL) += \
-	$(call add-overlays, $(BENGAL_BOARDS), $(BENGAL_BASE_DTB))
+BENGAL_IOT_BOARDS +=\
+		bengal-iot-idp-overlay.dtbo \
+		bengalp-iot-idp-overlay.dtbo \
+		bengalp-iot-idp-usbc-2gb-overlay.dtbo \
+		bengal-iot-idp-usbc-2gb-overlay.dtbo \
+		bengal-iot-idp-2gb-overlay.dtbo \
+		bengal-iot-idp-usbc-overlay.dtbo \
+		bengalp-iot-idp-2gb-overlay.dtbo \
+		bengalp-iot-idp-usbc-overlay.dtbo
 
-bengal-overlays-dtb-$(CONFIG_ARCH_BENGAL) += $(BENGAL_BOARDS) $(BENGAL_BASE_DTB)
+bengal-dtb-$(CONFIG_ARCH_BENGAL) += \
+	$(call add-overlays, $(BENGAL_BOARDS), $(BENGAL_BASE_DTB)) \
+	$(call add-overlays, $(BENGAL_IOT_BOARDS), $(BENGAL_IOT_BASE_DTB))
+
+bengal-overlays-dtb-$(CONFIG_ARCH_BENGAL) += $(BENGAL_BOARDS) $(BENGAL_BASE_DTB)  $(BENGAL_IOT_BOARDS) $(BENGAL_IOT_BASE_DTB)
 dtb-y += $(bengal-dtb-y)
 
 SCUBA_BASE_DTB +=  scuba-iot.dtb scuba-iot-2gb.dtb scubap-iot.dtb scubap-iot-idp.dtb scubap-iot-idp-2gb.dtb
@@ -556,13 +581,28 @@ kalama_tuivm-dtb-$(CONFIG_ARCH_QTI_VM) += crow-vm-rumi.dtb \
 	crow-vm-idp.dtb \
 	crow-vm-idp-rcm.dtb \
 	crow-vm-qrd.dtb \
+	crowp-vm-rumi.dtb \
+	crowp-vm-atp.dtb \
+	crowp-vm-idp-wcd9395-aatc.dtb \
+	crowp-vm-idp-wcd9395-dmic.dtb \
+	crowp-vm-idp-wcd9395-wcd-dmic.dtb \
+	crowp-vm-idp.dtb \
+	crowp-vm-idp-rcm.dtb \
+	crowp-vm-qrd.dtb \
 	crow-oemvm-atp.dtb \
 	crow-oemvm-idp-wcd9395-aatc.dtb \
 	crow-oemvm-idp-wcd9395-dmic.dtb \
 	crow-oemvm-idp-wcd9395-wcd-dmic.dtb \
 	crow-oemvm-idp.dtb \
 	crow-oemvm-idp-rcm.dtb \
-	crow-oemvm-qrd.dtb
+	crow-oemvm-qrd.dtb \
+	crowp-oemvm-atp.dtb \
+	crowp-oemvm-idp-wcd9395-aatc.dtb \
+	crowp-oemvm-idp-wcd9395-dmic.dtb \
+	crowp-oemvm-idp-wcd9395-wcd-dmic.dtb \
+	crowp-oemvm-idp.dtb \
+	crowp-oemvm-idp-rcm.dtb \
+	crowp-oemvm-qrd.dtb
 dtb-y += $(kalama_tuivm-dtb-y)
 endif
 endif

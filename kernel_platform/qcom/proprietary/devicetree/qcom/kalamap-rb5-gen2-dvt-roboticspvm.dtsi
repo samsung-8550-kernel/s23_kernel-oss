@@ -12,7 +12,7 @@
 	};
 
 	oem_vm {
-		vm_name = "roboticsvm2";
+		vm_name = "rdcapvm";
 	};
 
 	gh-secure-vm-loader@3 {
@@ -28,7 +28,7 @@
 		compatible = "qcom,gh-secure-vm-loader";
 		qcom,pas-id = <34>;
 		qcom,vmid = <53>;
-		qcom,firmware-name = "roboticsvm2";
+		qcom,firmware-name = "rdcapvm";
 		memory-region = <&oem_vm_mem>;
 		virtio-backends = <&oem_vm_virt_be0>;
 	};
