@@ -111,7 +111,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Dist Bazel output files into a custom directory.")
     parser.add_argument(
-        "--dist_dir", required=True, help="""path to the dist dir.
+        "--dist_dir", "--destdir", required=True, help="""path to the dist dir.
             If relative, it is interpreted as relative to Bazel workspace root
             set by the BUILD_WORKSPACE_DIRECTORY environment variable, or
             PWD if BUILD_WORKSPACE_DIRECTORY is not set.""")
