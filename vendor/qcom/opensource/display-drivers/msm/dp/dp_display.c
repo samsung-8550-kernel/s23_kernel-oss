@@ -5269,6 +5269,7 @@ void secdp_reconnect(void)
 
 	mutex_lock(&dp->sec.attention_lock);
 	DP_INFO("dex_reconnect hpd low++\n");
+	cancel_work_sync(&dp->connect_work);
 
 	dp->sec.dex.reconnecting = true;
 	dp->sec.dex.status = DEX_MODE_CHANGING;
