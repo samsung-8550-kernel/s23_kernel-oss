@@ -44,12 +44,7 @@
 #define SEC_BATTERY_CABLE_POGO                   39
 #define SEC_BATTERY_CABLE_POGO_9V		 40
 #define SEC_BATTERY_CABLE_FPDO_DC		 41
-#define SEC_BATTERY_CABLE_WIRELESS_EPP		 42
-#define SEC_BATTERY_CABLE_WIRELESS_MPP		 43
-#define SEC_BATTERY_CABLE_LO_TA			44
-#define SEC_BATTERY_CABLE_WIRELESS_EPP_NV	 45
-#define SEC_BATTERY_CABLE_WIRELESS_EPP_FAKE	 46
-#define SEC_BATTERY_CABLE_MAX			47
+#define SEC_BATTERY_CABLE_MAX                    42
 
 /* d2d support type */
 #define SB_D2D_NONE	0
@@ -64,13 +59,12 @@
 
 /* ADC type */
 	/* NOT using this ADC channel */
-#define SEC_BATTERY_ADC_TYPE_NONE 	0
+#define SEC_BATTERY_ADC_TYPE_NONE	0
 	/* ADC in AP */
-#define SEC_BATTERY_ADC_TYPE_AP 	1
+#define SEC_BATTERY_ADC_TYPE_AP		1
 	 /* ADC by additional IC */
-#define SEC_BATTERY_ADC_TYPE_IC 	2
-#define SEC_BATTERY_ADC_TYPE_NUM 	3
-
+#define SEC_BATTERY_ADC_TYPE_IC		2
+#define SEC_BATTERY_ADC_TYPE_NUM	3
 
 /* thermal source */
 /* none */
@@ -334,7 +328,6 @@
 #define MFC_LED_CONTROL_DIMMING		24
 #define MFC_SET_OP_FREQ			25
 #define MFC_TX_UNO_OFF			26
-#define MFC_REQ_TX_PWR_BUDG	27
 
 #define MFC_VOUT_4_5V	0
 #define MFC_VOUT_5V	1

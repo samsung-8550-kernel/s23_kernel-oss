@@ -673,7 +673,3 @@ obj-$(CONFIG_SND_SOC_TAS5805M) += snd-soc-tas5805m.o
 
 # Mux
 obj-$(CONFIG_SND_SOC_SIMPLE_MUX)	+= snd-soc-simple-mux.o
-
-
-snd-soc-cs40l26-objs := cs40l26-a2h.o
-obj-$(CONFIG_SND_SOC_CS40L26)	+= snd-soc-cs40l26.o

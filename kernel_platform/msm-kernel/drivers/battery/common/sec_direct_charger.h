@@ -27,6 +27,9 @@
 #define SEC_DIRECT_CHG_MAX_VBAT			4200
 #define FPDO_DC_MIN_VBAT			3500
 #define FPDO_DC_MAX_VBAT			5000
+#if IS_ENABLED(CONFIG_SEC_ABC)
+#define ABC_DC_CNT	5
+#endif
 
 typedef enum _sec_direct_chg_src {
 	SEC_CHARGING_SOURCE_SWITCHING = 0,
@@ -75,9 +78,9 @@ struct sec_direct_charger_platform_data {
 	int swelling_high_rechg_voltage;
 	int fpdo_dc_min_vbat;
 	int fpdo_dc_max_vbat;
-
 #if IS_ENABLED(CONFIG_DUAL_BATTERY)
-	unsigned int sc_vbat_thresh; /* vbat threshold which dc to sc */
+	int fpdo_dc_max_main_vbat;
+	int fpdo_dc_max_sub_vbat;
 #endif
 };
 
@@ -119,5 +122,8 @@ struct sec_direct_charger_info {
 	int dc_input_current;
 	int dc_charging_current;
 	int test_mode_source;
+#if IS_ENABLED(CONFIG_SEC_ABC)
+	int abc_dc_current_cnt;
+#endif
 };
 #endif /* __SEC_DIRECT_CHARGER_H */
