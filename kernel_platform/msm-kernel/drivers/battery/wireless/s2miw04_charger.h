@@ -1,8 +1,8 @@
 /*
- * cps4038_charger.h
- * Samsung CPS4038 Charger Header
+ * s2miw04_charger.h
+ * Samsung S2MIW04 Charger Header
  *
- * Copyright (C) 2022 Samsung Electronics, Inc.
+ * Copyright (C) 2021 Samsung Electronics, Inc.
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -10,13 +10,13 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  */
 
-#ifndef __WIRELESS_CHARGER_CPS4038_H
-#define __WIRELESS_CHARGER_CPS4038_H __FILE__
+#ifndef __WIRELESS_CHARGER_S2MIW04_H
+#define __WIRELESS_CHARGER_S2MIW04_H __FILE__
 
 #include <linux/mfd/core.h>
 #include <linux/regulator/machine.h>
@@ -25,16 +25,23 @@
 #include <linux/pm_wakeup.h>
 #include "../common/sec_charging_common.h"
 
-#define MFC_FW_BIN_VERSION		0x301D
-#define MFC_FW_VER_BIN_CPS		0x00C4
+#define MFC_FW_BIN_VERSION		0x303A
+#define MFC_FW_VER_BIN_LSI		0xBFC
+#define MTP_MAX_PROGRAM_SIZE 0x4000
+#define MTP_VERIFY_ADDR			0x0000
+#define MTP_VERIFY_SIZE			0x4680
+#define MTP_VERIFY_CHKSUM		0x02D26
 
 #define MFC_FLASH_FW_HEX_PATH		"mfc/mfc_fw_flash.bin"
 #define MFC_FW_SDCARD_BIN_PATH		"wpc_fw_sdcard.bin"
 
-#define MFC_FLASH_FW_HEX_CPS_PATH	"mfc/mfc_fw_flash_cps4038.bin"
+#define MFC_FLASH_FW_HEX_LSI_PATH	"mfc/mfc_fw_flash_s2miw04.bin"
 
 /* for SPU FW update */
-#define MFC_FW_SPU_BIN_PATH		"mfc/mfc_fw_spu_cps4038.bin"
+#define MFC_FW_SPU_BIN_PATH		"mfc/mfc_fw_spu_s2miw04.bin"
+
+#define MFC_CHIP_ID_P9320		0x20
+#define MFC_CHIP_ID_S2MIW04		0x04
 
 /* REGISTER MAPS */
 #define MFC_CHIP_ID_L_REG					0x00
@@ -71,16 +78,17 @@
 #define MFC_EPT_REG			0x3B /* EPT(End of Power Transfer) cases. PMA has only EOC case */
 #define MFC_ADC_VOUT_L_REG					0x3C
 #define MFC_ADC_VOUT_H_REG					0x3D
-
+/* s2miw04: VOUT_SET_L / VOUT_SET_H */
 #define MFC_VOUT_SET_L_REG					0x3E
 #define MFC_VOUT_SET_H_REG					0x3F
 #define MFC_VRECT_ADJ_REG					0x39
 #define MFC_ADC_VRECT_L_REG					0x40
 #define MFC_ADC_VRECT_H_REG					0x41
-#define MFC_ADC_IRECT_L_REG					0x42
-#define MFC_ADC_IRECT_H_REG					0x43
 #define MFC_TX_IUNO_LIMIT_L_REG				0x34
 #define MFC_TX_IUNO_LIMIT_H_REG				0x35
+#define MFC_TX_IUNO_HYS_REG					0x36
+#define MFC_TX_IUNO_OFFSET_L_REG			0x37
+#define MFC_TX_IUNO_OFFSET_H_REG			0x38
 #define MFC_ADC_IOUT_L_REG					0x44
 #define MFC_ADC_IOUT_H_REG					0x45
 #define MFC_ADC_DIE_TEMP_L_REG				0x46 /* 8 LSB field is used, Celsius */
@@ -89,7 +97,7 @@
 #define MFC_TRX_OP_FREQ_H_REG				0x49 /* kHZ */
 #define MFC_RX_PING_FREQ_L_REG				0x4A /* kHZ */
 #define MFC_RX_PING_FREQ_H_REG				0x4B /* kHZ */
-#define MFC_ILIM_SET_REG					0x4C /* ILim =  value * 0.05(A) */
+#define MFC_ILIM_SET_REG					0x4C /* ILim =  value * 0.05(A) + 0.05(A) */
 #define MFC_ILIM_ADJ_REG					0x4D /* AdjVal = ILIM_ADJ * 50 */
 
 #define MFC_AP2MFC_CMD_L_REG				0x4E
@@ -117,29 +125,24 @@
 #define MFC_WPC_TRX_DATA2_VALUE1_REG		0x5A
 /********************************************************************************/
 
+#define WPCTx_E_FOD_MIN_CURRENT_HIGH_F			0x56
+#define WPCTx_E_FOD_POWER_LIMIT				0x57
+#define WPCTx_E_FOD_NU_PEAKING_DELAY			0x5B
+
 #define MFC_ADT_TIMEOUT_PKT_REG				0x5C
 #define MFC_ADT_TIMEOUT_STR_REG				0x5D
-
-#define MFC_TX_IUNO_HYS_REG					0x36
-#define MFC_TX_IUNO_OFFSET_L_REG			0x37
-#define MFC_TX_IUNO_OFFSET_H_REG			0x38
-
-#define MFC_TX_OC_FOD1_LIMIT_L_REG			0x94
-#define MFC_TX_OC_FOD1_LIMIT_H_REG			0x95
-#define MFC_TX_OC_FOD2_LIMIT_L_REG			0x96
-#define MFC_TX_OC_FOD2_LIMIT_H_REG			0x97
 
 #define MFC_STARTUP_EPT_COUNTER				0x6D
 
 #define MFC_TX_DUTY_CYCLE					0xE6 /* default 0x80(50%) */
 
-/* TX Max Operating Frequency = 60 MHz/value, default is 148kHz (60MHz/0x195=148KHz) */
+/* TX Max Operating Frequency = value / 10kHz, default is 40KHz (0x195 / 10kHz = 40KHz) */
 #define MFC_TX_MAX_OP_FREQ_L_REG			0x60 /* default 0x95 */
 #define MFC_TX_MAX_OP_FREQ_H_REG			0x61 /* default 0x01 */
-/* TX Min Operating Frequency = 60 MHz/value, default is 80kHz (60MHz/0x2EE=80KHz) */
+/* TX Min Operating Frequency = value / 10kHz, default is 75KHz (0x2EE / 10kHz = 75KHz) */
 #define MFC_TX_MIN_OP_FREQ_L_REG			0x62 /* default 0xEE */
 #define MFC_TX_MIN_OP_FREQ_H_REG			0x63 /* default 0x2 */
-/* TX Digital Ping Frequency = 60 MHz/value, default is 90kHz (60MHz/0x29B=90KHz) */
+/* TX Digital Ping Frequency = value / 10kHz, default is 66KHz (0x29B / 10kHz = 66KHz) */
 #define MFC_TX_PING_FREQ_L_REG				0x64 /* default 0x9B */
 #define MFC_TX_PING_FREQ_H_REG				0x65 /* default 0x02 */
 /* TX Mode Minimum Duty Setting Register, Min_Duty, default is 50% (0x32=50) */
@@ -158,34 +161,6 @@
 #define MFC_START_EPT_COUNTER_REG			0x6D
 #define MFC_CTRL_MODE_REG					0x6E
 #define MFC_RC_PHM_PING_PERIOD_REG			0x6F
-
-#define MFC_IEC_QFOD_ENABLE_REG				0x114
-#define MFC_IEC_QVALUE_REG					0x115
-#define MFC_IEC_FRES_L_REG					0x116
-#define MFC_IEC_FRES_R_REG					0x117
-#define MFC_IEC_Q_THRESH1_REG				0x118
-#define MFC_IEC_Q_THRESH2_REG				0x119
-#define MFC_IEC_FRES_THRESH1_REG			0x11A
-#define MFC_IEC_FRES_THRESH2_REG			0x11B
-#define MFC_IEC_POWER_LIMIT_THRESH_L_REG	0x11C
-#define MFC_IEC_POWER_LIMIT_THRESH_H_REG	0x11D
-#define MFC_IEC_PLOSS_THRESH1_L_REG			0x11E
-#define MFC_IEC_PLOSS_THRESH1_H_REG			0x11F
-#define MFC_IEC_PLOSS_THRESH2_L_REG			0x120
-#define MFC_IEC_PLOSS_THRESH2_H_REG			0x121
-#define MFC_IEC_PLOSS_FREQ_THRESH1_REG		0x122
-#define MFC_IEC_PLOSS_FREQ_THRESH2_REG		0x123
-#define MFC_IEC_TA_POWER_LIMIT_THRESH_L_REG	0x124
-#define MFC_IEC_TA_POWER_LIMIT_THRESH_H_REG	0x125
-#define MFC_IEC_TA_PLOSS_THRESH1_L_REG		0x126
-#define MFC_IEC_TA_PLOSS_THRESH1_H_REG		0x127
-#define MFC_IEC_TA_PLOSS_THRESH2_L_REG		0x128
-#define MFC_IEC_TA_PLOSS_THRESH2_H_REG		0x129
-#define MFC_IEC_TA_PLOSS_FREQ_THRESH1_REG	0x12A
-#define MFC_IEC_TA_PLOSS_FREQ_THRESH2_REG	0x12B
-#define MFC_IEC_PLOSS_FOD_ENABLE_REG		0x12C
-#define MFC_IEC_PWM_DUTY_THRESH			0x12D
-#define MFC_IEC_TA_PWM_DUTY_THRESH		0x12E
 
 #define MFC_WPC_FOD_0A_REG					0x70
 #define MFC_WPC_FOD_0B_REG					0x71
@@ -208,47 +183,35 @@
 #define MFC_WPC_FOD_9A_REG					0x82
 #define MFC_WPC_FOD_9B_REG					0x83
 
-#define MFC_WPC_PARA_MODE_REG				0x8C
+#define WPCTx_E_FOD_INIT_FREQ					0x84
+#define WPCTx_E_FOD_INIT_DUTY					0x85
+#define WPCTx_E_FOD_DELAY					0x86
+#define WPCTx_E_FOD_2Q_DESIGNED					0x87
+#define WPCTx_E_FOD_Q_THRESHOLD_NORMAL				0x88 /* [7:4] : WPCTx_E_FOD_Q_THRESHOLD_NORMAL, [3:0] : WPCTx_E_FOD_MIN_CURRENT_Q */
+#define WPCTx_E_FOD_CURRENT_THRESHOLD_DUTY_INIT		0x89
+#define WPCTx_E_FOD_CURRENT_THRESHOLD_DUTY		0x8A
+#define WPCTx_E_FOD_CURRENT_CHECK_FREQ			0x8B
 
-#define MFC_WPC_FWC_FOD_0A_REG				0x100
-#define MFC_WPC_FWC_FOD_0B_REG				0x101
-#define MFC_WPC_FWC_FOD_1A_REG				0x102
-#define MFC_WPC_FWC_FOD_1B_REG				0x103
-#define MFC_WPC_FWC_FOD_2A_REG				0x104
-#define MFC_WPC_FWC_FOD_2B_REG				0x105
-#define MFC_WPC_FWC_FOD_3A_REG				0x106
-#define MFC_WPC_FWC_FOD_3B_REG				0x107
-#define MFC_WPC_FWC_FOD_4A_REG				0x108
-#define MFC_WPC_FWC_FOD_4B_REG				0x109
-#define MFC_WPC_FWC_FOD_5A_REG				0x10A
-#define MFC_WPC_FWC_FOD_5B_REG				0x10B
-#define MFC_WPC_FWC_FOD_6A_REG				0x10C
-#define MFC_WPC_FWC_FOD_6B_REG				0x10D
-#define MFC_WPC_FWC_FOD_7A_REG				0x10E
-#define MFC_WPC_FWC_FOD_7B_REG				0x10F
-#define MFC_WPC_FWC_FOD_8A_REG				0x100
-#define MFC_WPC_FWC_FOD_8B_REG				0x101
-#define MFC_WPC_FWC_FOD_9A_REG				0x102
-#define MFC_WPC_FWC_FOD_9B_REG				0x103
-
-#define MFC_PMA_FOD_0A_REG					0x84
-#define MFC_PMA_FOD_0B_REG					0x85
-#define MFC_PMA_FOD_1A_REG					0x86
-#define MFC_PMA_FOD_1B_REG					0x87
-#define MFC_PMA_FOD_2A_REG					0x88
-#define MFC_PMA_FOD_2B_REG					0x89
-#define MFC_PMA_FOD_3A_REG					0x8A
-#define MFC_PMA_FOD_3B_REG					0x8B
+#define WPCTX_E_FOD_Q_LIMIT				0x800
+#define WPCTX_E_FOD_I1_LIMIT				0x801
+#define WPCTX_E_FOD_I2_LIMIT				0x802
+#define WPCTX_E_FOD_MIN_FREQ_CURRENT_LIMIT	0x803
+#define WPCTX_E_FOD_POWER_LOSS_LIMIT		0x804
+#define WPCTX_E_FOD_PING_CURRENT_LIMIT		0x805
 
 #define MFC_ADT_ERROR_CODE_REG				0x8D
 
-#define MFC_TX_FOD_GAIN_REG					0x8F
+#define MFC_TX_FOD_GAIN_REG				0x8F
+
 #define MFC_TX_FOD_OFFSET_L_REG				0x90
 #define MFC_TX_FOD_OFFSET_H_REG				0x91
 #define MFC_TX_FOD_THRESH1_L_REG			0x92
 #define MFC_TX_FOD_THRESH1_H_REG			0x93
-#define MFC_TX_FOD_TA_THRESH_L_REG			0x98
-#define MFC_TX_FOD_TA_THRESH_H_REG			0x99
+
+#define MFC_TX_OC_FOD1_LIMIT_L_REG			0x94
+#define MFC_TX_OC_FOD1_LIMIT_H_REG			0x95
+#define MFC_TX_OC_FOD2_LIMIT_L_REG			0x96
+#define MFC_TX_OC_FOD2_LIMIT_H_REG			0x97
 
 #define MFX_TX_ID_VALUE_L_REG				0x9C
 #define MFX_TX_ID_VALUE_H_REG				0x9D
@@ -259,6 +222,14 @@
 #define MFC_TX_CONFLICT_CURRENT_REG			0xA0
 #define MFC_RECT_MODE_AP_CTRL				0xA2
 #define MFC_CEP_TIME_OUT_REG				0xA4
+/*
+ * TX Mode Ping Duty Setting Register, Ping_Duty, default is 50% (0x1=50)
+ * 0xA7 = 0 : Ping Soft Start Disable
+ * 0xA7 = 1 : Ping Soft Start Enable & Ping Duty 50%
+ * 0xA7 = other cases (X) : Ping Soft Start Enable & Ping Duty X/2%
+ * (ex) 0xA7 = 90(0x5A) : Ping Duty 45%
+ */
+#define MFC_TX_PING_DUTY_SETTING_REG		0xA7 /* default 0x1 */
 
 #define MFC_FW_DATA_CODE_0					0xB0
 #define MFC_FW_DATA_CODE_1					0xB1
@@ -286,27 +257,27 @@
 
 #define MFC_PWR_HOLD_INTERVAL_REG			0xCF
 
-//#define MFC_TX_FOD_THRESH2_REG				0xE3
-//#define MFC_TX_DUTY_CYCLE_REG				0xE6
+#define MFC_TX_FOD_THRESH2_REG				0xE3
+#define MFC_TX_DUTY_CYCLE_REG				0xE6
 
-//#define MFC_TX_PWR_L_REG					0xEC
-//#define MFC_TX_PWR_H_REG					0xED
+#define MFC_TX_PWR_L_REG					0xEC
+#define MFC_TX_PWR_H_REG					0xED
 
 #define MFC_RPP_SCALE_COEF_REG					0xF0
-//#define MFC_ACTIVE_LOAD_CONTROL_REG				0xF1
+#define MFC_ACTIVE_LOAD_CONTROL_REG				0xF1
 /* Parameter 1: Major and Minor Version */
 #define MFC_TX_RXID1_READ_REG					0xF2
 /* Parameter 2~3: Manufacturer Code */
 #define MFC_TX_RXID2_READ_REG					0xF3
 #define MFC_TX_RXID3_READ_REG					0xF4
 /* Parameter 4~10: Basic Device Identifier */
-//#define MFC_TX_RXID4_READ_REG					0xF5
-//#define MFC_TX_RXID5_READ_REG					0xF6
-//#define MFC_TX_RXID6_READ_REG					0xF7
-//#define MFC_TX_RXID7_READ_REG					0xF8
-//#define MFC_TX_RXID8_READ_REG					0xF9
-//#define MFC_TX_RXID9_READ_REG					0xFA
-//#define MFC_TX_RXID10_READ_REG					0xFB
+#define MFC_TX_RXID4_READ_REG					0xF5
+#define MFC_TX_RXID5_READ_REG					0xF6
+#define MFC_TX_RXID6_READ_REG					0xF7
+#define MFC_TX_RXID7_READ_REG					0xF8
+#define MFC_TX_RXID8_READ_REG					0xF9
+#define MFC_TX_RXID9_READ_REG					0xFA
+#define MFC_TX_RXID10_READ_REG					0xFB
 
 #define SS_ID		0x42
 #define SS_CODE		0x64
@@ -315,8 +286,8 @@
  * Its default value is 0x1A90(6800mV).
  * Target_Vrect (Iout,Vout) = {Vout + 0.05} + { Vrect(Iout,5V)-Vrect(1A,5V) } * 5/9
  */
-#define MFC_TARGET_VRECT_L_REG				0x0164 /* default 0x90 */
-#define MFC_TARGET_VRECT_H_REG				0x0165 /* default 0x1A */
+#define MFC_TARGET_VRECT_L_REG				0x015B /* default 0x90 */
+#define MFC_TARGET_VRECT_H_REG				0x015C /* default 0x1A */
 
 #define MFC_RX_CEP_PACKET_COUNTER0			0x029C
 #define MFC_RX_CEP_PACKET_COUNTER1			0x029D
@@ -469,6 +440,10 @@
 
 #define MFC_NUM_FOD_REG					20
 
+/* BIT DEFINE of Control Status Register, CTRL_STS(0x28) */
+#define MFC_CMB_ALWAYS_ON_STATUS_SHIFT		7
+#define MFC_CMB_ALWAYS_ON_STATUS_MASK		(1 << MFC_CMB_ALWAYS_ON_STATUS_SHIFT)
+
 /* BIT DEFINE of Command Register, COM_L(0x4E) */
 #define MFC_CMD_TOGGLE_PHM_SHIFT			7
 #define MFC_CMD_RESERVED6_SHIFT				6
@@ -487,10 +462,12 @@
 #define MFC_CMD_TOGGLE_LDO_MASK				(1 << MFC_CMD_TOGGLE_LDO_SHIFT)
 #define MFC_CMD_SEND_TRX_DATA_MASK			(1 << MFC_CMD_SEND_TRX_DATA_SHIFT)
 
-/* Command Register, COM_H(0x4F) */
+/* BIT DEFINE of Command Register, COM_H(0x4F) */
+#define MFC_CMD2_CMB_ALWAYS_TOGGLE_SHIFT	7
 #define MFC_CMD2_SEND_ADT_SHIFT				0
-#define MFC_CMD2_SEND_ADT_MASK				(1 << MFC_CMD2_SEND_ADT_SHIFT)
 #define MFC_CMD2_WP_ON_SHIFT				0
+#define MFC_CMD2_CMB_ALWAYS_TOGGLE_MASK		(1 << MFC_CMD2_CMB_ALWAYS_TOGGLE_SHIFT)
+#define MFC_CMD2_SEND_ADT_MASK				(1 << MFC_CMD2_SEND_ADT_SHIFT)
 #define MFC_CMD2_WP_ON_MASK					(1 << MFC_CMD2_WP_ON_SHIFT)
 
 /* Chip Revision and Font Register, Chip_Rev (0x02) */
@@ -580,7 +557,7 @@
 #define MFC_RX_MODE_RESERVED1					0x5
 #define MFC_RX_MODE_RESERVED2					0x6
 #define MFC_RX_MODE_UNKNOWN						0x7
-//#if defined(CONFIG_WIRELESS_CHARGER_cps4038)
+#if defined(CONFIG_WIRELESS_CHARGER_S2MIW04)
 /* TX MODE[3:0] */
 #define MFC_TX_MODE_RX_MODE				0x0
 #define MFC_TX_MODE_MST_MODE1			0x1
@@ -588,7 +565,7 @@
 #define MFC_TX_MODE_TX_MODE				0x3
 #define MFC_TX_MODE_MST_PCR_MODE1		0x7
 #define MFC_TX_MODE_MST_PCR_MODE2		0xF
-//#endif
+#endif
 /* TX MODE[3:0] */
 #define MFC_TX_MODE_BACK_PWR_MISSING			0x0
 #define MFC_TX_MODE_MST_ON						0x4
@@ -667,33 +644,6 @@
 #define MFC_TX_PWR_BUDG_12W		0x78
 #define MFC_TX_PWR_BUDG_15W		0x96
 
-/* CPS F/W Update & Verification Define */
-#define ADDR_BUFFER0        0x20000800
-#define ADDR_BUFFER1        0x20001000
-#define ADDR_CMD            0x20001800
-#define ADDR_FLAG           0x20001804
-#define ADDR_BUF_SIZE       0x20001808
-#define ADDR_FW_VER         0x2000180C
-
-#define PGM_BUFFER0         0x10
-#define PGM_BUFFER1         0x20
-#define PGM_BUFFER2         0x30
-#define PGM_BUFFER3         0x40
-#define PGM_BUFFER0_1       0x50
-#define PGM_ERASER_0        0x60
-#define PGM_ERASER_1        0x70
-#define PGM_WR_FLAG         0x80
-
-#define CACL_CRC_APP        0x90
-#define CACL_CRC_TEST       0xB0
-
-#define PGM_ADDR_SET        0xC0
-
-#define RUNNING             0x66
-#define PASS                0x55
-#define FAIL                0xAA
-#define ILLEGAL             0x40
-
 #if defined(CONFIG_MST_V2)
 #define MST_MODE_ON				1		// ON Message to MFC ic
 #define MST_MODE_OFF			0		// OFF Message to MFC ic
@@ -707,8 +657,6 @@
 #define MFC_MST_LDO_TURN_ON		0x301c
 #define MFC_MST_LDO_CONFIG_8	0x343c
 #define MFC_MST_OVER_TEMP_INT	0x0024
-#define MFC_ISET_PCR			0x0169
-#define MFC_RES_PCR				0x016A
 #endif
 
 /* F/W Update & Verification ERROR CODES */
@@ -805,20 +753,21 @@ enum {
 	MFC_SIZE,
 	MFC_DATA,
 	MFC_PACKET,
+	MFC_FLICKER_TEST,
 };
 
-ssize_t cps4038_show_attrs(struct device *dev,
+ssize_t mfc_s2miw04_show_attrs(struct device *dev,
 				struct device_attribute *attr, char *buf);
 
-ssize_t cps4038_store_attrs(struct device *dev,
+ssize_t mfc_s2miw04_store_attrs(struct device *dev,
 				struct device_attribute *attr,
 				const char *buf, size_t count);
 
-#define CPS4038_ATTR(_name)				\
+#define MFC_S2MIW04_ATTR(_name)				\
 {							\
 	.attr = {.name = #_name, .mode = 0660},	\
-	.show = cps4038_show_attrs,			\
-	.store = cps4038_store_attrs,			\
+	.show = mfc_s2miw04_show_attrs,			\
+	.store = mfc_s2miw04_store_attrs,			\
 }
 
 enum mfc_irq {
@@ -849,7 +798,6 @@ enum mfc_ic_revision {
 enum mfc_chip_id {
 	MFC_CHIP_IDT = 1,
 	MFC_CHIP_LSI,
-	MFC_CHIP_CPS,
 };
 
 enum mfc_headroom {
@@ -868,7 +816,7 @@ enum mfc_fod_state {
 	FOD_STATE_CC = 0,
 	FOD_STATE_CV,
 	FOD_STATE_FULL,
-	FOD_STATE_HV,
+
 	FOD_STATE_MAX
 };
 
@@ -876,6 +824,26 @@ struct mfc_fod_data {
 	int pad_id;
 	int flag;
 	u32 *data[FOD_STATE_MAX];
+};
+
+struct mfc_iec_data {
+	u8 reg_56;
+	u8 reg_57;
+	u8 reg_5B;
+	u8 reg_84;
+	u8 reg_85;
+	u8 reg_86;
+	u8 reg_87;
+	u8 reg_88;
+	u8 reg_89;
+	u8 reg_8A;
+	u8 reg_8B;
+	u8 reg_800;
+	u8 reg_801;
+	u8 reg_802;
+	u8 reg_803;
+	u8 reg_804;
+	u8 reg_805;
 };
 
 #if defined(CONFIG_WIRELESS_IC_PARAM)
@@ -910,6 +878,10 @@ struct mfc_charger_platform_data {
 	u32 *wireless20_vrect_list;
 	u32 *wireless20_max_power_list;
 	u8 len_wc20_list;
+	u32 *hv_fod_cc;
+	u32 *hv_fod_cv;
+	u32 *hv_fod_full;
+	u8 hv_fod_len;
 	bool ic_on_mode;
 	int hw_rev_changed; /* this is only for noble/zero2 */
 	int otp_firmware_result;
@@ -929,9 +901,12 @@ struct mfc_charger_platform_data {
 	int mst_switch_delay;
 	int wc_cover_rpp;
 	int wc_hv_rpp;
+	u32 oc_fod1;
 	u32 phone_fod_thresh1;
 	u32 buds_fod_thresh1;
-	u32 buds_fod_ta_thresh;
+	u32 phone_fod_threshold;
+	u32 ping_freq;
+	u32 gear_ping_freq;
 	u32 cep_timeout;
 	int no_hv;
 	bool keep_tx_vout;
@@ -945,29 +920,8 @@ struct mfc_charger_platform_data {
 	struct mfc_fod_data *fod_list;
 	int fod_data_count;
 	int tx_conflict_curr;
-	u32 iec_qfod_enable;
-	u32 iec_q_thresh_1;
-	u32 iec_q_thresh_2;
-	u32 iec_fres_thresh_1;
-	u32 iec_fres_thresh_2;
-	u32 iec_power_limit_thresh;
-	u32 iec_ploss_thresh_1;
-	u32 iec_ploss_thresh_2;
-	u32 iec_ploss_freq_thresh_1;
-	u32 iec_ploss_freq_thresh_2;
-	u32 iec_ta_power_limit_thresh;
-	u32 iec_ta_ploss_thresh_1;
-	u32 iec_ta_ploss_thresh_2;
-	u32 iec_ta_ploss_freq_thresh_1;
-	u32 iec_ta_ploss_freq_thresh_2;
-	u32 iec_ploss_fod_enable;
-	u32 iec_pwm_duty_thresh;
-	u32 iec_ta_pwm_duty_thresh;
 
-#if defined(CONFIG_MST_PCR)
-	u32 mst_iset_pcr;
-#endif
-	u32 fw_ver;
+	struct mfc_iec_data iec_params;
 };
 
 #define mfc_charger_platform_data_t \
@@ -979,14 +933,13 @@ struct mfc_charger_platform_data {
 struct mfc_charger_data {
 	struct i2c_client				*client;
 	struct device					*dev;
-	mfc_charger_platform_data_t		*pdata;
+	mfc_charger_platform_data_t	*pdata;
 	struct mutex io_lock;
 	struct mutex wpc_en_lock;
 	struct mutex fw_lock;
 	const struct firmware *firm_data_bin;
 
-	u8 det_state; /* ACTIVE HIGH */
-	u8 pdrc_state; /* ACTIVE LOW */
+	int wc_w_state;
 
 	struct power_supply *psy_chg;
 	struct wakeup_source *wpc_ws;
@@ -994,10 +947,14 @@ struct mfc_charger_data {
 	struct wakeup_source *wpc_tx_ws;
 	struct wakeup_source *wpc_rx_ws;
 	struct wakeup_source *wpc_update_ws;
+	struct wakeup_source *wpc_opfq_ws;
+	struct wakeup_source *wpc_tx_duty_min_ws;
+	struct wakeup_source *wpc_tx_ping_duty_ws;
 	struct wakeup_source *wpc_afc_vout_ws;
 	struct wakeup_source *wpc_vout_mode_ws;
 	struct wakeup_source *wpc_rx_det_ws;
 	struct wakeup_source *wpc_tx_phm_ws;
+	struct wakeup_source *wpc_vrect_check_ws;
 	struct wakeup_source *wpc_tx_id_ws;
 	struct wakeup_source *wpc_tx_pwr_budg_ws;
 	struct wakeup_source *wpc_pdrc_ws;
@@ -1009,6 +966,7 @@ struct mfc_charger_data {
 	struct work_struct wcin_work;
 	struct delayed_work wpc_det_work;
 	struct delayed_work wpc_pdrc_work;
+	struct delayed_work wpc_opfq_work;
 	struct delayed_work wpc_isr_work;
 	struct delayed_work wpc_tx_isr_work;
 	struct delayed_work wpc_tx_id_work;
@@ -1023,10 +981,15 @@ struct mfc_charger_data {
 	struct delayed_work wpc_rx_type_det_work;
 	struct delayed_work wpc_rx_connection_work;
 	struct delayed_work wpc_tx_op_freq_work;
+	struct delayed_work wpc_tx_duty_min_work;
+	struct delayed_work wpc_tx_ping_duty_work;
 	struct delayed_work wpc_tx_phm_work;
 	struct delayed_work wpc_vrect_check_work;
 	struct delayed_work wpc_rx_power_work;
 	struct delayed_work wpc_cs100_work;
+#if defined(CONFIG_SEC_FACTORY)
+	struct delayed_work evt2_err_detect_work;
+#endif
 	struct delayed_work wpc_init_work;
 	struct delayed_work align_check_work;
 	struct delayed_work mode_change_work;
@@ -1040,6 +1003,7 @@ struct mfc_charger_data {
 	int pad_vout;
 	int is_mst_on; /* mst */
 	int chip_id;
+	u8 chip_id_now;
 	int fw_cmd;
 	int vout_mode;
 	u32 vout_by_txid;
@@ -1075,8 +1039,10 @@ struct mfc_charger_data {
 	u8 tx_pwr_budg;
 	u8 device_event;
 	int i2c_error_count;
+	unsigned long gear_start_time;
 	int input_current;
 	int duty_min;
+	int ping_duty;
 	int wpc_en_flag;
 	bool tx_device_phm;
 
@@ -1092,7 +1058,7 @@ struct mfc_charger_data {
 	int vout_strength;
 	u32 mis_align_tx_try_cnt;
 	bool skip_phm_work_in_sleep;
-	bool reg_access_lock;
+	u8 pdrc_state;
 	bool check_rx_power;
 
 	int mfc_adc_tx_vout;
@@ -1132,4 +1098,4 @@ struct mfc_charger_data {
 	(pad_id != TX_ID_DREAM_STAND) && \
 	(pad_id != TX_ID_DREAM_DOWN))
 
-#endif /* __WIRELESS_CHARGER_CPS4038_H */
+#endif /* __WIRELESS_CHARGER_S2MIW04_H */
