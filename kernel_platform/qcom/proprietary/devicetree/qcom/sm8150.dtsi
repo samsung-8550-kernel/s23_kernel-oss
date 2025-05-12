@@ -496,8 +496,10 @@
 
 		mdsp_mem: mdsp_region {
 			compatible = "shared-dma-pool";
-			reg = <0x0 0xec000000 0x0 0x1000000>;
+			alloc-ranges = <0x0 0x00000000 0x0 0xffffffff>;
 			reusable;
+			alignment = <0x0 0x400000>;
+			size = <0x0 0x1000000>;
 		};
 
 		user_contig_mem: user_contig_region {
@@ -1142,7 +1144,7 @@
 		qcom,bus-vector-names = "MIN",
 			"MAX";
 		qcom,instance-type = "ufs";
-		qcom,num-fde-slots = <10>;
+		qcom,num-fde-slots = <31>;
 	};
 
 	ufsphy_mem: ufsphy_mem@1d87000 {
@@ -1475,9 +1477,6 @@
 		reg = <0x17c10000 0x1000>;
 		reg-names = "wdt-base";
 		interrupts = <GIC_SPI 0 IRQ_TYPE_LEVEL_HIGH>;
-		qcom,support-scandump;
-		qcom,scandump-sizes = <0x10100 0x10100 0x10100 0x10100
-					0x18100 0x18100 0x18100 0x18100>;
 	};
 
 	qcom,sps {

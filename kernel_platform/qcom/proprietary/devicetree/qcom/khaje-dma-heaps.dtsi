@@ -34,7 +34,6 @@
 			qcom,dma-heap-type = <HEAP_TYPE_CMA>;
 			memory-region = <&user_contig_mem>;
 		};
-
 		qcom,display {
 			qcom,dma-heap-name = "qcom,display";
 			qcom,dma-heap-type = <HEAP_TYPE_CMA>;

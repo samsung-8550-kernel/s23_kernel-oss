@@ -23,7 +23,6 @@
 		mmc0 = &sdhc_1; /*SDC1 eMMC slot*/
 		serial0 = &qupv3_se6_2uart;
 		hsuart0 = &qupv3_se5_4uart;
-		i2c1 = &qupv3_se1_i2c;
 	};
 
 	firmware: firmware {};
@@ -1429,6 +1428,12 @@
 			qcom,glinkpkt-dev-name = "glink_pkt_slate_display_data";
 		};
 
+		qcom,glinkpkt-slate-touch-ctrl {
+			qcom,glinkpkt-edge = "slate";
+			qcom,glinkpkt-ch-name = "touch-ctrl";
+			qcom,glinkpkt-dev-name = "glink_pkt_slate_touch_ctrl";
+		};
+
 		qcom,glinkpkt-slate-ssc-usta {
 			qcom,glinkpkt-edge = "slate";
 			qcom,glinkpkt-ch-name = "ssc_usta";
@@ -1632,13 +1637,6 @@
 			qcom,glinkpkt-ch-name = "slate-dfu";
 			qcom,glinkpkt-dev-name = "glink_pkt_slate_dfu";
 		};
-
-		qcom,glinkpkt-slate-custom-data {
-			qcom,glinkpkt-edge = "slate";
-			qcom,glinkpkt-ch-name = "slate_custom_data";
-			qcom,glinkpkt-dev-name = "glink_pkt_slate_custom_data";
-		};
-
 		qcom,glinkpkt-ss-bt-ctrl {
 			qcom,glinkpkt-edge = "slate";
 			qcom,glinkpkt-ch-name = "ss_bt_ctrl";
@@ -1661,11 +1659,6 @@
 			qcom,glinkpkt-edge = "slate";
 			qcom,glinkpkt-ch-name = "ss_bt_ssr_data";
 			qcom,glinkpkt-dev-name = "glink_pkt_ss_bt_ssr_data";
-			};
-		qcom,glinkpkt-ss-bt-obex-data {
-			qcom,glinkpkt-edge = "slate";
-			qcom,glinkpkt-ch-name = "ss_bt_obex_data";
-			qcom,glinkpkt-dev-name = "glink_pkt_ss_bt_obex_data";
 			};
 
 	};
@@ -1831,8 +1824,8 @@
 
 		opp-100000000 {
 			opp-hz = /bits/ 64 <100000000>;
-			opp-peak-kBps = <500000 133332>;
-			opp-avg-kBps = <37000 0>;
+			opp-peak-kBps = <500000 200000>;
+			opp-avg-kBps = <104000 0>;
 		};
 
 		opp-384000000 {
@@ -1845,8 +1838,9 @@
 	sdhc_1: sdhci@4744000 {
 		compatible = "qcom,sdhci-msm-v5";
 		reg = <0x04744000 0x1000>, <0x04745000 0x1000>,
-		      <0x04748000 0x8000>;
-		reg-names = "hc", "cqhci", "cqhci_ice";
+		      <0x04748000 0x8000>, <0x04750000 0x9000>;
+		reg-names = "hc", "cqhci", "cqhci_ice",
+			    "cqhci_ice_hwkm";
 
 		iommus = <&apps_smmu 0xC0 0x0>;
 		qcom,iommu-dma = "bypass";

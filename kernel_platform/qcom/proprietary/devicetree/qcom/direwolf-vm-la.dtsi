@@ -49,12 +49,10 @@
 };
 
 &pcie4 {
-	/delete-property/ iommu-map;
 	status = "okay";
 };
 
 &pcie0 {
-	/delete-property/ iommu-map;
 	status = "okay";
 };
 

@@ -303,8 +303,6 @@ patternProperties:
     description: Digi International Inc.
   "^digilent,.*":
     description: Diglent, Inc.
-  "^diodes,.*":
-    description: Diodes Incorporated
   "^dioo,.*":
     description: Dioo Microcircuit Co., Ltd
   "^dlc,.*":
@@ -810,10 +808,6 @@ patternProperties:
     description: NLT Technologies, Ltd.
   "^nokia,.*":
     description: Nokia
-  "^novatek,.*":
-    description: Novatek Microelectronics Corporation
-  "^kinet,.*":
-    description: Kinet
   "^nordic,.*":
     description: Nordic Semiconductor
   "^novtech,.*":

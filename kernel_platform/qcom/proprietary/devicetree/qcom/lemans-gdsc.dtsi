@@ -5,7 +5,6 @@
 		reg = <0xadf31bc 0x4>;
 		regulator-name = "cam_cc_titan_top_gdsc";
 		qcom,retain-regs;
-		qcom,support-cfg-gdscr;
 		status = "disabled";
 	};
 
@@ -19,7 +18,6 @@
 		qcom,support-hw-trigger;
 		proxy-supply = <&disp0_cc_mdss_core_gdsc>;
 		qcom,proxy-consumer-enable;
-		qcom,support-cfg-gdscr;
 		status = "disabled";
 	};
 
@@ -33,7 +31,6 @@
 		qcom,support-hw-trigger;
 		proxy-supply = <&disp0_cc_mdss_core_int2_gdsc>;
 		qcom,proxy-consumer-enable;
-		qcom,support-cfg-gdscr;
 		status = "disabled";
 	};
 
@@ -47,7 +44,6 @@
 		qcom,support-hw-trigger;
 		proxy-supply = <&disp1_cc_mdss_core_gdsc>;
 		qcom,proxy-consumer-enable;
-		qcom,support-cfg-gdscr;
 		status = "disabled";
 	};
 
@@ -60,7 +56,6 @@
 		qcom,support-hw-trigger;
 		proxy-supply = <&disp1_cc_mdss_core_int2_gdsc>;
 		qcom,proxy-consumer-enable;
-		qcom,support-cfg-gdscr;
 		status = "disabled";
 	};
 
@@ -71,7 +66,6 @@
 		regulator-name = "gcc_emac0_gdsc";
 		qcom,retain-regs;
 		qcom,support-hw-trigger;
-		qcom,support-cfg-gdscr;
 		status = "disabled";
 	};
 
@@ -81,7 +75,6 @@
 		regulator-name = "gcc_emac1_gdsc";
 		qcom,retain-regs;
 		qcom,support-hw-trigger;
-		qcom,support-cfg-gdscr;
 		status = "disabled";
 	};
 
@@ -98,7 +91,6 @@
 		qcom,no-status-check-on-disable;
 		qcom,retain-regs;
 		qcom,support-hw-trigger;
-		qcom,support-cfg-gdscr;
 		status = "disabled";
 	};
 
@@ -110,7 +102,6 @@
 		qcom,no-status-check-on-disable;
 		qcom,retain-regs;
 		qcom,support-hw-trigger;
-		qcom,support-cfg-gdscr;
 		status = "disabled";
 	};
 
@@ -120,7 +111,6 @@
 		regulator-name = "gcc_ufs_card_gdsc";
 		qcom,gds-timeout = <1500>;
 		qcom,retain-regs;
-		qcom,support-cfg-gdscr;
 		status = "disabled";
 	};
 
@@ -130,7 +120,6 @@
 		regulator-name = "gcc_ufs_phy_gdsc";
 		qcom,gds-timeout = <1500>;
 		qcom,retain-regs;
-		qcom,support-cfg-gdscr;
 		status = "disabled";
 	};
 
@@ -139,7 +128,6 @@
 		reg = <0x11c004 0x4>;
 		regulator-name = "gcc_usb20_prim_gdsc";
 		qcom,retain-regs;
-		qcom,support-cfg-gdscr;
 		status = "disabled";
 	};
 
@@ -148,7 +136,6 @@
 		reg = <0x11b004 0x4>;
 		regulator-name = "gcc_usb30_prim_gdsc";
 		qcom,retain-regs;
-		qcom,support-cfg-gdscr;
 		status = "disabled";
 	};
 
@@ -157,7 +144,6 @@
 		reg = <0x12f004 0x4>;
 		regulator-name = "gcc_usb30_sec_gdsc";
 		qcom,retain-regs;
-		qcom,support-cfg-gdscr;
 		status = "disabled";
 	};
 
@@ -273,7 +259,6 @@
 		qcom,skip-disable-before-sw-enable;
 		qcom,reset-aon-logic;
 		qcom,retain-regs;
-		qcom,support-cfg-gdscr;
 		status = "disabled";
 	};
 
@@ -284,7 +269,6 @@
 		regulator-name = "video_cc_mvs0_gdsc";
 		qcom,retain-regs;
 		qcom,support-hw-trigger;
-		qcom,support-cfg-gdscr;
 		status = "disabled";
 	};
 
@@ -293,7 +277,6 @@
 		reg = <0xabf804c 0x4>;
 		regulator-name = "video_cc_mvs0c_gdsc";
 		qcom,retain-regs;
-		qcom,support-cfg-gdscr;
 		status = "disabled";
 	};
 
@@ -303,7 +286,6 @@
 		regulator-name = "video_cc_mvs1_gdsc";
 		qcom,retain-regs;
 		qcom,support-hw-trigger;
-		qcom,support-cfg-gdscr;
 		status = "disabled";
 	};
 
@@ -312,7 +294,6 @@
 		reg = <0xabf8074 0x4>;
 		regulator-name = "video_cc_mvs1c_gdsc";
 		qcom,retain-regs;
-		qcom,support-cfg-gdscr;
 		status = "disabled";
 	};
 };

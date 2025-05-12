@@ -53,6 +53,7 @@
 			qcom,dma-heap-name = "qcom,mdsp";
 			qcom,dma-heap-type = <HEAP_TYPE_CMA>;
 			memory-region = <&mdsp_mem>;
+			qcom,uncached-heap;
 		};
 	};
 };

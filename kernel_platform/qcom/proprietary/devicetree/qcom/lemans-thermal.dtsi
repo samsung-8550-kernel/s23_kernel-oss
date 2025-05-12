@@ -13,7 +13,6 @@
 		interrupts = <GIC_SPI 506 IRQ_TYPE_LEVEL_HIGH>,
 			<GIC_SPI 508 IRQ_TYPE_LEVEL_HIGH>;
 		interrupt-names = "uplow","critical";
-		tm-disable-on-suspend;
 		#thermal-sensor-cells = <1>;
 	};
 
@@ -25,7 +24,6 @@
 		interrupts = <GIC_SPI 507 IRQ_TYPE_LEVEL_HIGH>,
 			<GIC_SPI 509 IRQ_TYPE_LEVEL_HIGH>;
 		interrupt-names = "uplow","critical";
-		tm-disable-on-suspend;
 		#thermal-sensor-cells = <1>;
 	};
 
@@ -37,7 +35,6 @@
 		interrupts = <GIC_SPI 572 IRQ_TYPE_LEVEL_HIGH>,
 			<GIC_SPI 609 IRQ_TYPE_LEVEL_HIGH>;
 		interrupt-names = "uplow","critical";
-		tm-disable-on-suspend;
 		#thermal-sensor-cells = <1>;
 	};
 
@@ -49,7 +46,6 @@
 		interrupts = <GIC_SPI 573 IRQ_TYPE_LEVEL_HIGH>,
 			<GIC_SPI 610 IRQ_TYPE_LEVEL_HIGH>;
 		interrupt-names = "uplow","critical";
-		tm-disable-on-suspend;
 		#thermal-sensor-cells = <1>;
 	};
 

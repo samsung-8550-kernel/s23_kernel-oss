@@ -60,6 +60,7 @@
 		qcom,glb-db-receivers = <&hgsl_tcsr_receiver0
 					&hgsl_tcsr_receiver1>;
 
+		db-off;
 		default_iocoherency;
 	};
 };
